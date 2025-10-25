@@ -1,0 +1,85 @@
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+.DS_Store
+*.class
+
+# Build outputs
+target/
+build/
+dist/
+out/
+*.jar
+*.war
+*.ear
+
+# Maven
+.mvn/
+!.mvn/wrapper/maven-wrapper.jar
+
+# Gradle
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+
+# Spring Boot
+spring-boot-*.log
+
+# Logs
+*.log
+logs/
+log/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+*.env
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Redis dumps
+dump.rdb
+
+# OS
+Thumbs.db
+.DS_Store
+*.swp
+
+# Node modules (mobile)
+node_modules/
+.expo/
+.expo-shared/
+
+# Mobile builds
+*.apk
+*.aab
+*.ipa
+ios/Pods/
+android/.gradle/
+android/app/build/
+
+# Secrets
+secrets/
+*.pem
+*.key
+**/application-local.yml
+**/application-secret.yml
+
+# Test coverage
+coverage/
+.nyc_output/
+jacoco/
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
