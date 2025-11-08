@@ -31,6 +31,8 @@ El proyecto está dividido en cuatro componentes principales:
 ├── proxy/                # Servicio Proxy
 ├── mobile/               # Cliente Móvil
 ├── docs/                 # Documentación técnica
+├── scripts/              # Scripts de utilidades
+├── docker-compose.yml    # Configuración de servicios
 └── README.md
 ```
 
@@ -51,9 +53,49 @@ El proyecto está dividido en cuatro componentes principales:
 
 Proyecto en fase inicial de desarrollo.
 
-## Instalación
+## Instalación y Uso
 
-Instrucciones de instalación y configuración serán agregadas a medida que avance el desarrollo.
+### Iniciar el entorno de desarrollo
+
+1. Asegúrate de tener Docker Desktop instalado y corriendo
+
+2. Inicia todos los servicios:
+```bash
+./scripts/start-dev.sh
+```
+
+Esto levantará:
+- PostgreSQL (puerto 5432)
+- Redis Local (puerto 6379)
+- Redis Cátedra Mock (puerto 6380)
+- Kafka (puerto 9092)
+- Zookeeper (puerto 2181)
+
+### Ver logs
+
+Para ver los logs de todos los servicios:
+```bash
+./scripts/logs.sh
+```
+
+Para ver logs de un servicio específico:
+```bash
+./scripts/logs.sh postgres
+```
+
+### Detener servicios
+
+```bash
+./scripts/stop-dev.sh
+```
+
+### Limpiar todo (eliminar datos)
+
+```bash
+./scripts/clean.sh
+```
+
+Para más información sobre los scripts, consulta [scripts/README.md](scripts/README.md)
 
 ## Autor
 
