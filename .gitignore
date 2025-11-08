@@ -17,8 +17,7 @@ out/
 *.ear
 
 # Maven
-.mvn/
-!.mvn/wrapper/maven-wrapper.jar
+# Los wrappers están gestionados por el .gitignore de backend/
 
 # Gradle
 .gradle/
