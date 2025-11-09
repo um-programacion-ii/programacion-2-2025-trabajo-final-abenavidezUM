@@ -26,3 +26,7 @@ management:
     health:
       show-details: when-authorized
 
+jwt:
+  secret: ${JWT_SECRET:eventos-secret-key-for-jwt-token-generation-change-in-production-123456789}
+  expiration: ${JWT_EXPIRATION:3600000} # 1 hora en milisegundos
+
