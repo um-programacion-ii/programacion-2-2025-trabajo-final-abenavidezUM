@@ -4,6 +4,8 @@ import com.eventos.backend.domain.Usuario;
 import com.eventos.backend.dto.JwtResponseDTO;
 import com.eventos.backend.dto.LoginRequestDTO;
 import com.eventos.backend.dto.RegisterRequestDTO;
+import com.eventos.backend.exception.ConflictException;
+import com.eventos.backend.exception.ResourceNotFoundException;
 import com.eventos.backend.repository.UsuarioRepository;
 import com.eventos.backend.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -47,7 +49,7 @@ public class AuthService {
 
         // Obtener información del usuario
         Usuario usuario = usuarioRepository.findByUsername(loginRequest.getUsername())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "username", loginRequest.getUsername()));
 
         // Guardar token en Redis con TTL de 1 hora
         String redisKey = "auth:token:" + usuario.getId();
@@ -65,12 +67,12 @@ public class AuthService {
     public JwtResponseDTO register(RegisterRequestDTO registerRequest) {
         // Validar que el username no exista
         if (usuarioRepository.existsByUsername(registerRequest.getUsername())) {
-            throw new RuntimeException("El username ya está en uso");
+            throw new ConflictException("El username ya está en uso");
         }
 
         // Validar que el email no exista
         if (usuarioRepository.existsByEmail(registerRequest.getEmail())) {
-            throw new RuntimeException("El email ya está en uso");
+            throw new ConflictException("El email ya está en uso");
         }
 
         // Crear nuevo usuario
@@ -102,7 +104,7 @@ public class AuthService {
     @Transactional
     public void logout(String username) {
         Usuario usuario = usuarioRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "username", username));
 
         // Eliminar token de Redis
         String redisKey = "auth:token:" + usuario.getId();
