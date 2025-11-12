@@ -1,8 +1,11 @@
 package com.eventos.backend.controller;
 
+import com.eventos.backend.domain.Usuario;
 import com.eventos.backend.dto.JwtResponseDTO;
 import com.eventos.backend.dto.LoginRequestDTO;
 import com.eventos.backend.dto.RegisterRequestDTO;
+import com.eventos.backend.dto.UsuarioDTO;
+import com.eventos.backend.mapper.UsuarioMapper;
 import com.eventos.backend.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final UsuarioMapper usuarioMapper;
 
     /**
      * POST /api/auth/login
@@ -62,12 +66,15 @@ public class AuthController {
      * Obtener información del usuario autenticado
      */
     @GetMapping("/me")
-    public ResponseEntity<String> getCurrentUser() {
+    public ResponseEntity<UsuarioDTO> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated()) {
-            return ResponseEntity.ok("Usuario autenticado: " + authentication.getName());
+            String username = authentication.getName();
+            Usuario usuario = authService.getCurrentUser(username);
+            UsuarioDTO usuarioDTO = usuarioMapper.toDTO(usuario);
+            return ResponseEntity.ok(usuarioDTO);
         }
-        return ResponseEntity.ok("No autenticado");
+        return ResponseEntity.status(401).build();
     }
 }
 
