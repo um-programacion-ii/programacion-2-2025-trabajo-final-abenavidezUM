@@ -32,6 +32,6 @@ jwt:
 
 catedra:
   api:
-    url: ${CATEDRA_API_URL:http://localhost:8081}
+    url: ${CATEDRA_API_URL:http://192.168.194.250:8080}
     token: ${CATEDRA_API_TOKEN:}
 
