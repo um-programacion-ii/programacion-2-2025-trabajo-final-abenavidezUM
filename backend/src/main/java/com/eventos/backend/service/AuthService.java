@@ -121,5 +121,14 @@ public class AuthService {
         String storedToken = redisService.get(redisKey, String.class);
         return token.equals(storedToken);
     }
+
+    /**
+     * Obtener usuario actual autenticado
+     */
+    @Transactional(readOnly = true)
+    public Usuario getCurrentUser(String username) {
+        return usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "username", username));
+    }
 }
 
