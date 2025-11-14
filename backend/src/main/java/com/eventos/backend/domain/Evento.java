@@ -104,5 +104,12 @@ public class Evento {
         integrantes.remove(integrante);
         integrante.setEvento(null);
     }
+
+    /**
+     * Método helper para limpiar todos los integrantes
+     */
+    public void clearIntegrantes() {
+        integrantes.clear();
+    }
 }
 

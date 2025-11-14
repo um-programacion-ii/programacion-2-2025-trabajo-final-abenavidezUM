@@ -89,5 +89,10 @@ public interface EventoRepository extends JpaRepository<Evento, Long> {
      */
     @Query("SELECT e FROM Evento e WHERE e.activo = true AND (e.ultimaSincronizacion IS NULL OR e.updatedAt > e.ultimaSincronizacion)")
     List<Evento> findEventsNeedingSync();
+
+    /**
+     * Obtener el evento con la última sincronización más reciente
+     */
+    Optional<Evento> findFirstByOrderByUltimaSincronizacionDesc();
 }
 
