@@ -33,12 +33,15 @@ spring:
       timeout: 60000ms
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     consumer:
-      group-id: eventos-backend-dev
+      group-id: ${KAFKA_CONSUMER_GROUP_ID:eventos-backend-dev-62344}
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: false
+    topic:
+      eventos: ${KAFKA_TOPIC_EVENTOS:eventos-changes}
 
 jwt:
   secret: desarrollo_secret_key_cambiar_en_produccion_minimo_256_bits_para_seguridad
