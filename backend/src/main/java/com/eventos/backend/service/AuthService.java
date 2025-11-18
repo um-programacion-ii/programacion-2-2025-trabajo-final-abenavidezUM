@@ -130,5 +130,39 @@ public class AuthService {
         return usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", "username", username));
     }
+
+    /**
+     * Refrescar token JWT
+     * Genera un nuevo token a partir de un token válido (aunque esté cerca de expirar)
+     */
+    @Transactional(readOnly = true)
+    public JwtResponseDTO refreshToken(String token) {
+        // Validar que el token sea válido
+        if (!tokenProvider.validateToken(token)) {
+            throw new com.eventos.backend.exception.UnauthorizedException("Token inválido o expirado");
+        }
+
+        // Obtener username del token
+        String username = tokenProvider.getUsernameFromToken(token);
+        
+        // Verificar que el usuario existe y está habilitado
+        Usuario usuario = usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "username", username));
+
+        if (!usuario.getEnabled()) {
+            throw new com.eventos.backend.exception.ForbiddenException("Usuario deshabilitado");
+        }
+
+        // Generar nuevo token
+        String newToken = tokenProvider.generateTokenFromUsername(username);
+
+        // Actualizar token en Redis con TTL de 1 hora
+        String redisKey = "auth:token:" + usuario.getId();
+        redisService.save(redisKey, newToken, 1, java.util.concurrent.TimeUnit.HOURS);
+
+        log.info("Token refrescado exitosamente para usuario: {}", username);
+
+        return new JwtResponseDTO(newToken, usuario.getUsername(), usuario.getEmail());
+    }
 }
 
