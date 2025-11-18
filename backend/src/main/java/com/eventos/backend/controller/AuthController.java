@@ -3,6 +3,7 @@ package com.eventos.backend.controller;
 import com.eventos.backend.domain.Usuario;
 import com.eventos.backend.dto.JwtResponseDTO;
 import com.eventos.backend.dto.LoginRequestDTO;
+import com.eventos.backend.dto.RefreshTokenRequestDTO;
 import com.eventos.backend.dto.RegisterRequestDTO;
 import com.eventos.backend.dto.UsuarioDTO;
 import com.eventos.backend.mapper.UsuarioMapper;
@@ -59,6 +60,17 @@ public class AuthController {
             log.info("Logout exitoso para usuario: {}", username);
         }
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * POST /api/auth/refresh
+     * Refrescar token JWT
+     */
+    @PostMapping("/refresh")
+    public ResponseEntity<JwtResponseDTO> refreshToken(@Valid @RequestBody RefreshTokenRequestDTO refreshRequest) {
+        log.info("Intento de refresh token");
+        JwtResponseDTO response = authService.refreshToken(refreshRequest.getToken());
+        return ResponseEntity.ok(response);
     }
 
     /**
