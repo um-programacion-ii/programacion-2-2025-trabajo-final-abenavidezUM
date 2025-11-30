@@ -6,6 +6,7 @@ import com.eventos.backend.mapper.CatedraEventoMapper;
 import com.eventos.backend.repository.EventoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,13 +16,24 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class EventoSyncService {
 
     private final CatedraApiClient catedraApiClient;
     private final EventoRepository eventoRepository;
     private final CatedraEventoMapper catedraEventoMapper;
+    private final EventoService eventoService;
+
+    public EventoSyncService(
+            CatedraApiClient catedraApiClient,
+            EventoRepository eventoRepository,
+            CatedraEventoMapper catedraEventoMapper,
+            @Lazy EventoService eventoService) {
+        this.catedraApiClient = catedraApiClient;
+        this.eventoRepository = eventoRepository;
+        this.catedraEventoMapper = catedraEventoMapper;
+        this.eventoService = eventoService;
+    }
 
     /**
      * Sincronización completa de todos los eventos desde cátedra
@@ -32,11 +44,9 @@ public class EventoSyncService {
         
         try {
             // Obtener todos los eventos completos desde cátedra
-            List<CatedraEventoCompletoDTO> eventosC
-
-atedra = catedraApiClient.obtenerEventosCompletos();
+            List<CatedraEventoCompletoDTO> eventosCatedra = catedraApiClient.obtenerEventosCompletos();
             
-            if (eventosC atedra == null || eventosC atedra.isEmpty()) {
+            if (eventosCatedra == null || eventosCatedra.isEmpty()) {
                 log.warn("No se obtuvieron eventos desde cátedra");
                 return 0;
             }
@@ -45,24 +55,30 @@ atedra = catedraApiClient.obtenerEventosCompletos();
             int eventosActualizados = 0;
             LocalDateTime ahora = LocalDateTime.now();
 
-            for (CatedraEventoCompletoDTO catedraEvento : eventosC atedra) {
+            for (CatedraEventoCompletoDTO catedraEvento : eventosCatedra) {
                 try {
                     // Buscar si el evento ya existe localmente por ID externo
-                    Optional<Evento> eventoExistente = eventoRepository.findByIdExternoAndActivoTrue(catedraEvento.getId());
+                    Optional<Evento> eventoExistente = eventoRepository.findByIdExterno(catedraEvento.getId());
 
                     if (eventoExistente.isPresent()) {
                         // Actualizar evento existente
                         Evento evento = eventoExistente.get();
                         catedraEventoMapper.updateEntity(evento, catedraEvento);
                         evento.setUltimaSincronizacion(ahora);
+                        evento.setActivo(true);
                         eventoRepository.save(evento);
                         eventosActualizados++;
+                        
+                        // Invalidar cache del evento actualizado
+                        invalidarCacheEvento(evento.getId(), catedraEvento.getId());
+                        
                         log.debug("Evento actualizado: {} (ID externo: {})", evento.getTitulo(), catedraEvento.getId());
                     } else {
                         // Crear nuevo evento
                         Evento nuevoEvento = catedraEventoMapper.toEntity(catedraEvento);
                         if (nuevoEvento != null) {
                             nuevoEvento.setUltimaSincronizacion(ahora);
+                            nuevoEvento.setActivo(true);
                             eventoRepository.save(nuevoEvento);
                             eventosCreados++;
                             log.debug("Evento creado: {} (ID externo: {})", nuevoEvento.getTitulo(), catedraEvento.getId());
@@ -74,7 +90,10 @@ atedra = catedraApiClient.obtenerEventosCompletos();
             }
 
             // Marcar como inactivos los eventos locales que no están en cátedra
-            marcarEventosInactivos(eventosC atedra, ahora);
+            marcarEventosInactivos(eventosCatedra, ahora);
+
+            // Invalidar cache de listados después de sincronización completa
+            eventoService.invalidateAllEventosCache();
 
             log.info("Sincronización completa finalizada: {} creados, {} actualizados", eventosCreados, eventosActualizados);
             return eventosCreados + eventosActualizados;
@@ -100,12 +119,17 @@ atedra = catedraApiClient.obtenerEventosCompletos();
                 log.warn("Evento con ID externo {} no encontrado en cátedra", idExterno);
                 
                 // Marcar como inactivo si existe localmente
-                Optional<Evento> eventoLocal = eventoRepository.findByIdExternoAndActivoTrue(idExterno);
+                Optional<Evento> eventoLocal = eventoRepository.findByIdExterno(idExterno);
                 if (eventoLocal.isPresent()) {
                     Evento evento = eventoLocal.get();
                     evento.setActivo(false);
                     evento.setUltimaSincronizacion(LocalDateTime.now());
                     eventoRepository.save(evento);
+                    
+                    // Invalidar cache
+                    invalidarCacheEvento(evento.getId(), idExterno);
+                    eventoService.invalidateAllEventosCache();
+                    
                     log.info("Evento local marcado como inactivo: {}", evento.getTitulo());
                 }
                 
@@ -113,30 +137,35 @@ atedra = catedraApiClient.obtenerEventosCompletos();
             }
 
             LocalDateTime ahora = LocalDateTime.now();
-            Optional<Evento> eventoExistente = eventoRepository.findByIdExternoAndActivoTrue(catedraEvento.getId());
+            Optional<Evento> eventoExistente = eventoRepository.findByIdExterno(catedraEvento.getId());
 
+            Evento resultado;
             if (eventoExistente.isPresent()) {
                 // Actualizar evento existente
                 Evento evento = eventoExistente.get();
                 catedraEventoMapper.updateEntity(evento, catedraEvento);
                 evento.setUltimaSincronizacion(ahora);
-                evento.setActivo(true); // Asegurar que está activo
-                eventoRepository.save(evento);
+                evento.setActivo(true);
+                resultado = eventoRepository.save(evento);
                 log.info("Evento actualizado: {}", evento.getTitulo());
-                return evento;
             } else {
                 // Crear nuevo evento
                 Evento nuevoEvento = catedraEventoMapper.toEntity(catedraEvento);
                 if (nuevoEvento != null) {
                     nuevoEvento.setUltimaSincronizacion(ahora);
                     nuevoEvento.setActivo(true);
-                    eventoRepository.save(nuevoEvento);
+                    resultado = eventoRepository.save(nuevoEvento);
                     log.info("Evento creado: {}", nuevoEvento.getTitulo());
-                    return nuevoEvento;
+                } else {
+                    return null;
                 }
             }
 
-            return null;
+            // Invalidar cache del evento y de listados
+            invalidarCacheEvento(resultado.getId(), idExterno);
+            eventoService.invalidateAllEventosCache();
+
+            return resultado;
 
         } catch (Exception e) {
             log.error("Error al sincronizar evento con ID externo {}: {}", idExterno, e.getMessage(), e);
@@ -163,6 +192,10 @@ atedra = catedraApiClient.obtenerEventosCompletos();
                     eventoLocal.setActivo(false);
                     eventoLocal.setUltimaSincronizacion(ahora);
                     eventoRepository.save(eventoLocal);
+                    
+                    // Invalidar cache del evento desactivado
+                    invalidarCacheEvento(eventoLocal.getId(), eventoLocal.getIdExterno());
+                    
                     eventosDesactivados++;
                     log.info("Evento marcado como inactivo: {} (ID externo: {})", eventoLocal.getTitulo(), eventoLocal.getIdExterno());
                 }
@@ -178,9 +211,25 @@ atedra = catedraApiClient.obtenerEventosCompletos();
     }
 
     /**
+     * Invalida la cache de un evento específico
+     */
+    private void invalidarCacheEvento(Long eventoId, Long idExterno) {
+        try {
+            if (eventoId != null) {
+                eventoService.invalidateEventoCache(eventoId);
+            }
+            if (idExterno != null) {
+                eventoService.invalidateEventoCacheByIdExterno(idExterno);
+            }
+        } catch (Exception e) {
+            log.warn("Error al invalidar cache del evento: {}", e.getMessage());
+        }
+    }
+
+    /**
      * Sincronización automática programada (cada 30 minutos)
      */
-    @Scheduled(fixedDelayString = "${sync.eventos.interval:1800000}") // 30 minutos por defecto
+    @Scheduled(fixedDelayString = "${sync.eventos.interval:1800000}")
     @Transactional
     public void sincronizacionAutomatica() {
         log.info("Ejecutando sincronización automática de eventos");
@@ -200,4 +249,3 @@ atedra = catedraApiClient.obtenerEventosCompletos();
                 .orElse(null);
     }
 }
-
