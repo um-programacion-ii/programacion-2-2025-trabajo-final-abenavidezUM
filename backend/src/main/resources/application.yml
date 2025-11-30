@@ -40,3 +40,8 @@ sync:
   eventos:
     interval: ${SYNC_EVENTOS_INTERVAL:1800000} # 30 minutos por defecto
 
+# Sesión de compra
+sesion:
+  compra:
+    ttl-minutos: ${SESION_COMPRA_TTL:30} # 30 minutos por defecto
+
