@@ -22,7 +22,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -158,7 +161,7 @@ public class VentaService {
     }
 
     /**
-     * Obtiene el historial de ventas del usuario actual
+     * Obtiene el historial de ventas del usuario actual (sin paginación)
      */
     @Transactional(readOnly = true)
     public List<VentaDTO> obtenerMisVentas() {
@@ -167,6 +170,49 @@ public class VentaService {
         
         List<Venta> ventas = ventaRepository.findByUsuarioIdWithAsientos(usuario.getId());
         return ventaMapper.toDTOList(ventas);
+    }
+
+    /**
+     * Obtiene el historial de ventas del usuario actual con paginación
+     */
+    @Transactional(readOnly = true)
+    public Page<VentaDTO> obtenerMisVentasPaginado(Pageable pageable) {
+        Usuario usuario = getUsuarioActual();
+        log.info("Obteniendo ventas paginadas - Usuario: {}, Página: {}", 
+                usuario.getUsername(), pageable.getPageNumber());
+        
+        List<Venta> ventas = ventaRepository.findByUsuarioIdWithAsientos(usuario.getId());
+        List<VentaDTO> ventasDTO = ventaMapper.toDTOList(ventas);
+        
+        return paginateList(ventasDTO, pageable);
+    }
+
+    /**
+     * Obtiene solo las ventas exitosas del usuario
+     */
+    @Transactional(readOnly = true)
+    public Page<VentaDTO> obtenerVentasExitosas(Pageable pageable) {
+        Usuario usuario = getUsuarioActual();
+        log.info("Obteniendo ventas exitosas para usuario: {}", usuario.getUsername());
+        
+        List<Venta> ventas = ventaRepository.findSuccessfulVentasByUsuario(usuario.getId());
+        List<VentaDTO> ventasDTO = ventaMapper.toDTOList(ventas);
+        
+        return paginateList(ventasDTO, pageable);
+    }
+
+    /**
+     * Obtiene solo las ventas fallidas del usuario
+     */
+    @Transactional(readOnly = true)
+    public Page<VentaDTO> obtenerVentasFallidas(Pageable pageable) {
+        Usuario usuario = getUsuarioActual();
+        log.info("Obteniendo ventas fallidas para usuario: {}", usuario.getUsername());
+        
+        List<Venta> ventas = ventaRepository.findFailedVentasByUsuario(usuario.getId());
+        List<VentaDTO> ventasDTO = ventaMapper.toDTOList(ventas);
+        
+        return paginateList(ventasDTO, pageable);
     }
 
     /**
@@ -185,6 +231,57 @@ public class VentaService {
         }
 
         return ventaMapper.toDTO(venta);
+    }
+
+    /**
+     * Sincroniza ventas con el servicio de cátedra
+     */
+    @Scheduled(fixedDelayString = "${venta.sync.interval:600000}")
+    @Transactional
+    public void sincronizarVentasCatedra() {
+        log.info("Sincronizando ventas con cátedra");
+        
+        try {
+            var ventasCatedra = catedraApiClient.listarVentas();
+            
+            if (ventasCatedra == null || ventasCatedra.isEmpty()) {
+                log.info("No hay ventas en cátedra para sincronizar");
+                return;
+            }
+
+            int sincronizadas = 0;
+            for (var ventaCatedra : ventasCatedra) {
+                if (ventaCatedra.getId() != null) {
+                    var ventaLocal = ventaRepository.findByIdExterno(ventaCatedra.getId());
+                    if (ventaLocal.isPresent()) {
+                        Venta venta = ventaLocal.get();
+                        if (!venta.getConfirmadaCatedra()) {
+                            venta.setConfirmadaCatedra(true);
+                            venta.setResultado(true);
+                            venta.setDescripcion("Sincronizado desde cátedra");
+                            ventaRepository.save(venta);
+                            sincronizadas++;
+                        }
+                    }
+                }
+            }
+            
+            log.info("Sincronización completada: {} ventas actualizadas", sincronizadas);
+            
+        } catch (Exception e) {
+            log.error("Error al sincronizar ventas con cátedra: {}", e.getMessage());
+        }
+    }
+
+    private <T> Page<T> paginateList(List<T> list, Pageable pageable) {
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), list.size());
+        
+        if (start > list.size()) {
+            return new PageImpl<>(List.of(), pageable, list.size());
+        }
+        
+        return new PageImpl<>(list.subList(start, end), pageable, list.size());
     }
 
     /**
