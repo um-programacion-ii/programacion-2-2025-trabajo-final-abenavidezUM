@@ -94,5 +94,10 @@ public interface EventoRepository extends JpaRepository<Evento, Long> {
      * Obtener el evento con la última sincronización más reciente
      */
     Optional<Evento> findFirstByOrderByUltimaSincronizacionDesc();
+
+    /**
+     * Buscar todos los eventos activos (sin ordenar)
+     */
+    List<Evento> findByActivoTrue();
 }
 
