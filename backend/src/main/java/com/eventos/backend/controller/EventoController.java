@@ -3,6 +3,7 @@ package com.eventos.backend.controller;
 import com.eventos.backend.dto.EventoDetalleDTO;
 import com.eventos.backend.dto.EventoResumenDTO;
 import com.eventos.backend.service.EventoService;
+import com.eventos.backend.service.EventoSyncService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -11,11 +12,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Controller para gestión de eventos
+ */
 @RestController
 @RequestMapping("/api/eventos")
 @RequiredArgsConstructor
@@ -23,6 +29,7 @@ import java.util.Map;
 public class EventoController {
 
     private final EventoService eventoService;
+    private final EventoSyncService eventoSyncService;
 
     // ==================== ENDPOINTS PÚBLICOS ====================
 
@@ -241,6 +248,109 @@ public class EventoController {
         log.info("GET /api/eventos/count");
         Long count = eventoService.countActiveEvents();
         return ResponseEntity.ok(Map.of("totalEventosActivos", count));
+    }
+
+    // ==================== ENDPOINTS ADMINISTRATIVOS ====================
+
+    /**
+     * POST /api/eventos/sync
+     * Sincronizar todos los eventos con el servicio de cátedra (requiere autenticación)
+     */
+    @PostMapping("/sync")
+    public ResponseEntity<Map<String, Object>> sincronizarEventos() {
+        log.info("POST /api/eventos/sync - Sincronización manual solicitada");
+        
+        try {
+            int eventosSincronizados = eventoSyncService.sincronizarTodos();
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("eventosSincronizados", eventosSincronizados);
+            response.put("timestamp", LocalDateTime.now());
+            response.put("mensaje", "Sincronización completada exitosamente");
+            
+            log.info("Sincronización manual completada: {} eventos", eventosSincronizados);
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("Error en sincronización manual: {}", e.getMessage(), e);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            response.put("timestamp", LocalDateTime.now());
+            response.put("mensaje", "Error al sincronizar eventos");
+            
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * POST /api/eventos/sync/{idExterno}
+     * Sincronizar un evento específico por su ID externo
+     */
+    @PostMapping("/sync/{idExterno}")
+    public ResponseEntity<Map<String, Object>> sincronizarEvento(@PathVariable Long idExterno) {
+        log.info("POST /api/eventos/sync/{} - Sincronización de evento específico", idExterno);
+        
+        try {
+            var evento = eventoSyncService.sincronizarEvento(idExterno);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", evento != null);
+            response.put("eventoId", evento != null ? evento.getId() : null);
+            response.put("eventoIdExterno", idExterno);
+            response.put("timestamp", LocalDateTime.now());
+            response.put("mensaje", evento != null 
+                    ? "Evento sincronizado exitosamente" 
+                    : "Evento no encontrado en servicio de cátedra");
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("Error al sincronizar evento {}: {}", idExterno, e.getMessage(), e);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            response.put("eventoIdExterno", idExterno);
+            response.put("timestamp", LocalDateTime.now());
+            response.put("mensaje", "Error al sincronizar evento");
+            
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * GET /api/eventos/sync/status
+     * Obtener información sobre la última sincronización
+     */
+    @GetMapping("/sync/status")
+    public ResponseEntity<Map<String, Object>> obtenerStatusSincronizacion() {
+        log.info("GET /api/eventos/sync/status");
+        
+        try {
+            LocalDateTime ultimaSincronizacion = eventoSyncService.obtenerUltimaSincronizacion();
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("ultimaSincronizacion", ultimaSincronizacion);
+            response.put("timestamp", LocalDateTime.now());
+            response.put("mensaje", ultimaSincronizacion != null 
+                    ? "Última sincronización registrada" 
+                    : "No hay sincronizaciones registradas");
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("Error al obtener status de sincronización: {}", e.getMessage(), e);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("error", e.getMessage());
+            response.put("timestamp", LocalDateTime.now());
+            response.put("mensaje", "Error al obtener status");
+            
+            return ResponseEntity.status(500).body(response);
+        }
     }
 }
 
