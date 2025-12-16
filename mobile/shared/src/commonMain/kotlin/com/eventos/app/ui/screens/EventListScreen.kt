@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -37,6 +38,9 @@ class EventListScreen : Screen {
                 TopAppBar(
                     title = { Text("Eventos Disponibles") },
                     actions = {
+                        IconButton(onClick = { navigator.push(SalesHistoryScreen()) }) {
+                            Icon(Icons.Default.History, "Mis Compras")
+                        }
                         IconButton(onClick = { screenModel.loadEventos() }) {
                             Icon(Icons.Default.Refresh, "Actualizar")
                         }
