@@ -19,8 +19,12 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.eventos.app.data.models.EventoResumen
+import com.eventos.app.data.remote.ApiClient
+import com.eventos.app.data.repository.AuthRepository
+import com.eventos.app.data.repository.SesionRepository
 import com.eventos.app.ui.viewmodel.EventListScreenModel
 import com.eventos.app.ui.viewmodel.EventListUiState
+import kotlinx.coroutines.launch
 
 /**
  * Pantalla de listado de eventos
@@ -32,6 +36,49 @@ class EventListScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = rememberScreenModel { EventListScreenModel() }
         val uiState by screenModel.uiState.collectAsState()
+        val scope = rememberCoroutineScope()
+        
+        var showLogoutDialog by remember { mutableStateOf(false) }
+        
+        // Dialog de confirmación de logout
+        if (showLogoutDialog) {
+            AlertDialog(
+                onDismissRequest = { showLogoutDialog = false },
+                title = { Text("Cerrar Sesión") },
+                text = { Text("¿Estás seguro que deseas cerrar sesión?") },
+                confirmButton = {
+                    Button(onClick = {
+                        showLogoutDialog = false
+                        scope.launch {
+                            // Llamar al endpoint de logout
+                            val authRepository = AuthRepository()
+                            authRepository.logout()
+                            
+                            // Limpiar sesión de compra si existe
+                            val sesionRepository = SesionRepository()
+                            try {
+                                sesionRepository.cancelarSesion()
+                            } catch (e: Exception) {
+                                // Ignorar error si no hay sesión
+                            }
+                            
+                            // Limpiar token local
+                            ApiClient.clearSession()
+                            
+                            // Navegar a login
+                            navigator.replaceAll(LoginScreen())
+                        }
+                    }) {
+                        Text("Cerrar Sesión")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showLogoutDialog = false }) {
+                        Text("Cancelar")
+                    }
+                }
+            )
+        }
         
         Scaffold(
             topBar = {
@@ -45,8 +92,7 @@ class EventListScreen : Screen {
                             Icon(Icons.Default.Refresh, "Actualizar")
                         }
                         IconButton(onClick = { 
-                            // TODO: Implementar logout
-                            navigator.replaceAll(LoginScreen())
+                            showLogoutDialog = true
                         }) {
                             Icon(Icons.Default.ExitToApp, "Cerrar sesión")
                         }
