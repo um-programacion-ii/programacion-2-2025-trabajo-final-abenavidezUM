@@ -45,7 +45,11 @@ public class SecurityConfig {
                                 "/api/auth/**",
                                 "/api/eventos/public/**",
                                 "/actuator/health",
-                                "/actuator/info"
+                                "/actuator/info",
+                                // Swagger/OpenAPI endpoints
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
                         ).permitAll()
                         // Todas las demás rutas requieren autenticación
                         .anyRequest().authenticated()

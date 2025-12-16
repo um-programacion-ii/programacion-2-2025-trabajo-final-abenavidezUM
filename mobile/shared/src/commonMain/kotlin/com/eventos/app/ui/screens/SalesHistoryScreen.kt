@@ -1,11 +1,10 @@
 package com.eventos.app.ui.screens
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,9 +15,9 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 
 /**
- * Pantalla de listado de eventos
+ * Pantalla de historial de ventas
  */
-class EventListScreen : Screen {
+class SalesHistoryScreen : Screen {
     
     @Composable
     override fun Content() {
@@ -28,10 +27,10 @@ class EventListScreen : Screen {
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Eventos Disponibles") },
-                    actions = {
-                        IconButton(onClick = { /* TODO: Logout */ }) {
-                            Icon(Icons.Default.ExitToApp, "Cerrar sesión")
+                    title = { Text("Mis Compras") },
+                    navigationIcon = {
+                        IconButton(onClick = { navigator.pop() }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver")
                         }
                     }
                 )
@@ -54,15 +53,13 @@ class EventListScreen : Screen {
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // TODO: Cargar eventos reales
-                    items(5) { index ->
-                        EventCard(
-                            title = "Evento de Ejemplo ${index + 1}",
-                            date = "2024-12-20 19:00",
-                            price = 5000.0,
-                            onClick = {
-                                navigator.push(EventDetailScreen(eventId = index.toLong()))
-                            }
+                    // TODO: Cargar ventas reales
+                    items(3) { index ->
+                        SaleCard(
+                            eventName = "Evento #${index + 1}",
+                            date = "2024-12-15",
+                            total = 5000.0,
+                            status = if (index == 0) "Confirmada" else "Pendiente"
                         )
                     }
                 }
@@ -71,36 +68,45 @@ class EventListScreen : Screen {
     }
     
     @Composable
-    private fun EventCard(
-        title: String,
+    private fun SaleCard(
+        eventName: String,
         date: String,
-        price: Double,
-        onClick: () -> Unit
+        total: Double,
+        status: String
     ) {
         Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = onClick)
+            modifier = Modifier.fillMaxWidth()
         ) {
             Column(
                 modifier = Modifier.padding(16.dp)
             ) {
                 Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleLarge
+                    text = eventName,
+                    style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = date,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = "Fecha: $date",
+                    style = MaterialTheme.typography.bodyMedium
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "$ ${price.toInt()}",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Total: $ ${total.toInt()}",
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Text(
+                        text = status,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (status == "Confirmada") 
+                            MaterialTheme.colorScheme.primary 
+                        else 
+                            MaterialTheme.colorScheme.error
+                    )
+                }
             }
         }
     }
