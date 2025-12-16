@@ -6,14 +6,20 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.eventos.app.data.models.EventoResumen
+import com.eventos.app.ui.viewmodel.EventListScreenModel
+import com.eventos.app.ui.viewmodel.EventListUiState
 
 /**
  * Pantalla de listado de eventos
@@ -23,47 +29,105 @@ class EventListScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        var isLoading by remember { mutableStateOf(false) }
+        val screenModel = rememberScreenModel { EventListScreenModel() }
+        val uiState by screenModel.uiState.collectAsState()
         
         Scaffold(
             topBar = {
                 TopAppBar(
                     title = { Text("Eventos Disponibles") },
                     actions = {
-                        IconButton(onClick = { /* TODO: Logout */ }) {
+                        IconButton(onClick = { screenModel.loadEventos() }) {
+                            Icon(Icons.Default.Refresh, "Actualizar")
+                        }
+                        IconButton(onClick = { 
+                            // TODO: Implementar logout
+                            navigator.replaceAll(LoginScreen())
+                        }) {
                             Icon(Icons.Default.ExitToApp, "Cerrar sesión")
                         }
                     }
                 )
             }
         ) { paddingValues ->
-            if (isLoading) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
+            when (val state = uiState) {
+                is EventListUiState.Loading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
                 }
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // TODO: Cargar eventos reales
-                    items(5) { index ->
-                        EventCard(
-                            title = "Evento de Ejemplo ${index + 1}",
-                            date = "2024-12-20 19:00",
-                            price = 5000.0,
-                            onClick = {
-                                navigator.push(EventDetailScreen(eventId = index.toLong()))
+                
+                is EventListUiState.Empty -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "No hay eventos disponibles",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            TextButton(onClick = { screenModel.loadEventos() }) {
+                                Text("Reintentar")
                             }
-                        )
+                        }
+                    }
+                }
+                
+                is EventListUiState.Success -> {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(state.eventos) { evento ->
+                            EventCard(
+                                evento = evento,
+                                onClick = {
+                                    navigator.push(EventDetailScreen(eventId = evento.id))
+                                }
+                            )
+                        }
+                    }
+                }
+                
+                is EventListUiState.Error -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Text(
+                                text = "Error al cargar eventos",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                            Text(
+                                text = state.message,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Button(onClick = { screenModel.loadEventos() }) {
+                                Text("Reintentar")
+                            }
+                        }
                     }
                 }
             }
@@ -72,9 +136,7 @@ class EventListScreen : Screen {
     
     @Composable
     private fun EventCard(
-        title: String,
-        date: String,
-        price: Double,
+        evento: EventoResumen,
         onClick: () -> Unit
     ) {
         Card(
@@ -85,22 +147,60 @@ class EventListScreen : Screen {
             Column(
                 modifier = Modifier.padding(16.dp)
             ) {
+                // Título
                 Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleLarge
+                    text = evento.titulo,
+                    style = MaterialTheme.typography.titleLarge,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
+                
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = date,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "$ ${price.toInt()}",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                
+                // Descripción
+                evento.descripcion?.let { desc ->
+                    Text(
+                        text = desc,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+                
+                // Fecha y lugar
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text(
+                            text = "📅 ${evento.fecha}",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Text(
+                            text = "📍 ${evento.lugar}",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                    
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "$ ${evento.precio.toInt()}",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "${evento.asientosDisponibles} disponibles",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (evento.asientosDisponibles > 10) 
+                                MaterialTheme.colorScheme.primary 
+                            else 
+                                MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
             }
         }
     }
