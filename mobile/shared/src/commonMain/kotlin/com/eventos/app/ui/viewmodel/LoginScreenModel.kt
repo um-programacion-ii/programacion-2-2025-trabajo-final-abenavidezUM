@@ -8,6 +8,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * ViewModel para la pantalla de login
+ */
 class LoginScreenModel : ScreenModel {
     
     private val authRepository = AuthRepository()
@@ -40,3 +43,4 @@ sealed class LoginUiState {
     data class Success(val username: String) : LoginUiState()
     data class Error(val message: String) : LoginUiState()
 }
+

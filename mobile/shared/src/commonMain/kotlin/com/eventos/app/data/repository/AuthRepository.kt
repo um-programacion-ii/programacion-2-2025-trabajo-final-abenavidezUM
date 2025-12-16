@@ -9,10 +9,16 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 
+/**
+ * Repositorio para operaciones de autenticación
+ */
 class AuthRepository {
     
     private val client = ApiClient.httpClient
     
+    /**
+     * Iniciar sesión
+     */
     suspend fun login(username: String, password: String): Result<JwtResponse> {
         return try {
             val response = client.post("/api/auth/login") {
@@ -28,6 +34,9 @@ class AuthRepository {
         }
     }
     
+    /**
+     * Registrar nuevo usuario
+     */
     suspend fun register(
         username: String,
         email: String,
@@ -49,6 +58,9 @@ class AuthRepository {
         }
     }
     
+    /**
+     * Cerrar sesión
+     */
     suspend fun logout(): Result<Unit> {
         return try {
             client.post("/api/auth/logout")
@@ -59,6 +71,9 @@ class AuthRepository {
         }
     }
     
+    /**
+     * Obtener usuario actual
+     */
     suspend fun getCurrentUser(): Result<Usuario> {
         return try {
             val response = client.get("/api/auth/me")
@@ -69,7 +84,11 @@ class AuthRepository {
         }
     }
     
+    /**
+     * Verificar si hay sesión activa
+     */
     fun isAuthenticated(): Boolean {
         return ApiClient.isAuthenticated()
     }
 }
+

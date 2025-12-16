@@ -5,34 +5,38 @@ import com.eventos.app.data.models.EventoResumen
 import com.eventos.app.data.remote.ApiClient
 import io.ktor.client.call.*
 import io.ktor.client.request.*
-import kotlinx.serialization.json.*
 
+/**
+ * Repositorio para operaciones con eventos
+ */
 class EventoRepository {
     
     private val client = ApiClient.httpClient
     
-    suspend fun getEventos(page: Int = 0, size: Int = 20): Result<List<EventoResumen>> {
+    /**
+     * Obtener listado de eventos
+     */
+    suspend fun getEventos(page: Int = 0, size: Int = 10): Result<List<EventoResumen>> {
         return try {
             val response = client.get("/api/eventos") {
                 parameter("page", page)
                 parameter("size", size)
             }
             
-            // El backend devuelve Page<EventoResumenDTO>
-            val jsonElement: JsonElement = response.body()
-            val jsonObject = jsonElement.jsonObject
-            val contentArray = jsonObject["content"]?.jsonArray
+            // Asumiendo que el backend devuelve Page<EventoResumenDTO>
+            val data: Map<String, Any> = response.body()
+            val content = data["content"] as? List<*>
             
-            val eventos = contentArray?.map { element ->
-                Json.decodeFromJsonElement<EventoResumen>(element)
-            } ?: emptyList()
-            
+            val eventos = content?.mapNotNull { it as? EventoResumen } ?: emptyList()
             Result.success(eventos)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
     
+    /**
+     * Obtener detalle de un evento
+     */
     suspend fun getEventoById(id: Long): Result<EventoDetalle> {
         return try {
             val response = client.get("/api/eventos/$id")
@@ -43,7 +47,10 @@ class EventoRepository {
         }
     }
     
-    suspend fun searchEventos(query: String, page: Int = 0, size: Int = 20): Result<List<EventoResumen>> {
+    /**
+     * Buscar eventos por título
+     */
+    suspend fun searchEventos(query: String, page: Int = 0, size: Int = 10): Result<List<EventoResumen>> {
         return try {
             val response = client.get("/api/eventos/search") {
                 parameter("q", query)
@@ -51,17 +58,14 @@ class EventoRepository {
                 parameter("size", size)
             }
             
-            val jsonElement: JsonElement = response.body()
-            val jsonObject = jsonElement.jsonObject
-            val contentArray = jsonObject["content"]?.jsonArray
+            val data: Map<String, Any> = response.body()
+            val content = data["content"] as? List<*>
             
-            val eventos = contentArray?.map { element ->
-                Json.decodeFromJsonElement<EventoResumen>(element)
-            } ?: emptyList()
-            
+            val eventos = content?.mapNotNull { it as? EventoResumen } ?: emptyList()
             Result.success(eventos)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 }
+

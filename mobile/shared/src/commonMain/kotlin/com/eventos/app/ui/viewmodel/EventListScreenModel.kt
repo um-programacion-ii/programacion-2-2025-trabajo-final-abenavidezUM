@@ -9,6 +9,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * ViewModel para la pantalla de listado de eventos
+ */
 class EventListScreenModel : ScreenModel {
     
     private val eventoRepository = EventoRepository()
@@ -40,11 +43,6 @@ class EventListScreenModel : ScreenModel {
     }
     
     fun searchEventos(query: String) {
-        if (query.isBlank()) {
-            loadEventos()
-            return
-        }
-        
         screenModelScope.launch {
             _uiState.value = EventListUiState.Loading
             
@@ -70,3 +68,4 @@ sealed class EventListUiState {
     data class Success(val eventos: List<EventoResumen>) : EventListUiState()
     data class Error(val message: String) : EventListUiState()
 }
+
