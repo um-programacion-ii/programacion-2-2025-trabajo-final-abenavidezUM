@@ -55,22 +55,9 @@ public class BloqueoController {
                 request.getEventoId(), 
                 request.getAsientos().size());
         
-        try {
-            BloquearAsientosResponseDTO response = catedraApiClient.bloquearAsientos(request);
-            
-            if (response == null) {
-                log.error("Respuesta nula del servicio de cátedra");
-                return ResponseEntity.status(503).build(); // Service Unavailable
-            }
-            
-            // Devolver 200 OK siempre, el campo "resultado" indica si el bloqueo fue exitoso
-            return ResponseEntity.ok(response);
-            
-        } catch (Exception e) {
-            log.error("Error al bloquear asientos para evento {}: {}", 
-                    request.getEventoId(), e.getMessage());
-            return ResponseEntity.status(503).build(); // Service Unavailable
-        }
+        BloquearAsientosResponseDTO response = catedraApiClient.bloquearAsientos(request);
+        // Devolver 200 OK siempre, el campo "resultado" indica si el bloqueo fue exitoso
+        return ResponseEntity.ok(response);
     }
 }
 

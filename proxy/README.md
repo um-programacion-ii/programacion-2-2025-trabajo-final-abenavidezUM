@@ -63,6 +63,70 @@ Verifica el estado del servicio y la conectividad con la API de cátedra.
 }
 ```
 
+### Consulta de Eventos
+
+#### Listar Eventos Resumidos
+```
+GET /proxy/api/eventos/resumidos
+```
+
+#### Listar Eventos Completos
+```
+GET /proxy/api/eventos
+```
+
+#### Obtener Evento por ID
+```
+GET /proxy/api/eventos/{id}
+```
+
+### Bloqueo de Asientos
+
+#### Bloquear Asientos
+```
+POST /proxy/api/asientos/bloquear
+Content-Type: application/json
+
+{
+  "eventoId": 1,
+  "asientos": [
+    {"fila": 2, "columna": 1},
+    {"fila": 2, "columna": 2}
+  ]
+}
+```
+
+### Ventas
+
+#### Realizar Venta
+```
+POST /proxy/api/ventas/realizar
+Content-Type: application/json
+
+{
+  "eventoId": 1,
+  "fecha": "2025-08-17T20:00:00.000Z",
+  "precioVenta": 1400.10,
+  "asientos": [
+    {
+      "fila": 2,
+      "columna": 3,
+      "persona": "Fernando Galvez"
+    }
+  ]
+}
+```
+
+#### Listar Ventas
+```
+GET /proxy/api/ventas
+```
+
+#### Obtener Venta por ID
+```
+GET /proxy/api/ventas/{id}
+```
+
 ## 📊 Arquitectura
 
 ```
@@ -76,12 +140,51 @@ El proxy:
 3. Hace el request a la API de cátedra
 4. Devuelve la respuesta al backend
 
-## 📝 Próximas Funcionalidades
+## ⚠️ Manejo de Errores
 
-- [ ] Endpoints de consulta de eventos (ISSUE-027)
-- [ ] Endpoints de bloqueo de asientos (ISSUE-028)
-- [ ] Endpoints de ventas (ISSUE-029)
-- [ ] Manejo de errores y reintentos (ISSUE-030)
+El proxy implementa un sistema robusto de manejo de errores:
+
+### Estructura de Respuesta de Error
+```json
+{
+  "timestamp": "2025-12-17T10:30:00",
+  "status": 503,
+  "error": "Service Unavailable",
+  "message": "No se pudo conectar con el servicio de cátedra",
+  "path": "/proxy/api/eventos/1"
+}
+```
+
+### Códigos de Error
+
+| Código | Descripción |
+|--------|-------------|
+| **404** | Recurso no encontrado (evento/venta no existe) |
+| **503** | Servicio de cátedra no disponible |
+| **500** | Error interno del proxy |
+
+### Excepciones Personalizadas
+
+- **`CatedraServiceException`**: Error al comunicarse con la API de cátedra
+- **`ResourceNotFoundException`**: Recurso no encontrado (404)
+
+### GlobalExceptionHandler
+
+El `@RestControllerAdvice` intercepta todas las excepciones y devuelve respuestas JSON consistentes:
+
+- `HttpClientErrorException` → 4xx según código original
+- `HttpServerErrorException` → 503 Service Unavailable
+- `ResourceAccessException` → 503 Service Unavailable (timeout/conexión)
+- `CatedraServiceException` → 503 Service Unavailable
+- `ResourceNotFoundException` → 404 Not Found
+- `Exception` → 500 Internal Server Error
+
+## 📝 Funcionalidades Implementadas
+
+- ✅ Endpoints de consulta de eventos (ISSUE-027)
+- ✅ Endpoints de bloqueo de asientos (ISSUE-028)
+- ✅ Endpoints de ventas (ISSUE-029)
+- ✅ Manejo de errores global (ISSUE-030)
 
 ## 🧪 Testing
 
@@ -91,8 +194,29 @@ mvn test
 
 ## 📖 Estado Actual
 
-✅ Proyecto inicializado (ISSUE-026)
-- Estructura básica creada
-- RestTemplate configurado con autenticación
-- Health checks implementados
-- Logging configurado
+✅ **Proyecto completo - Fase 7 finalizada**
+
+- ✅ Proyecto inicializado (ISSUE-026)
+  - Estructura básica creada
+  - RestTemplate configurado con autenticación
+  - Health checks implementados
+  - Logging configurado
+
+- ✅ Endpoints de eventos (ISSUE-027)
+  - Listar eventos resumidos
+  - Listar eventos completos
+  - Obtener evento por ID
+
+- ✅ Endpoints de asientos (ISSUE-028)
+  - Bloquear asientos para un evento
+
+- ✅ Endpoints de ventas (ISSUE-029)
+  - Realizar venta
+  - Listar ventas
+  - Obtener venta por ID
+
+- ✅ Manejo de errores (ISSUE-030)
+  - GlobalExceptionHandler implementado
+  - Excepciones personalizadas
+  - Respuestas de error consistentes
+  - Logging mejorado

@@ -33,14 +33,8 @@ public class EventoController {
     @GetMapping("/resumidos")
     public ResponseEntity<List<EventoResumenDTO>> getEventosResumidos() {
         log.info("GET /api/eventos/resumidos - Consultando eventos resumidos");
-        
-        try {
-            List<EventoResumenDTO> eventos = catedraApiClient.getEventosResumidos();
-            return ResponseEntity.ok(eventos);
-        } catch (Exception e) {
-            log.error("Error al obtener eventos resumidos: {}", e.getMessage());
-            return ResponseEntity.status(503).build(); // Service Unavailable
-        }
+        List<EventoResumenDTO> eventos = catedraApiClient.getEventosResumidos();
+        return ResponseEntity.ok(eventos);
     }
 
     /**
@@ -53,14 +47,8 @@ public class EventoController {
     @GetMapping
     public ResponseEntity<List<EventoCompletoDTO>> getEventosCompletos() {
         log.info("GET /api/eventos - Consultando eventos completos");
-        
-        try {
-            List<EventoCompletoDTO> eventos = catedraApiClient.getEventosCompletos();
-            return ResponseEntity.ok(eventos);
-        } catch (Exception e) {
-            log.error("Error al obtener eventos completos: {}", e.getMessage());
-            return ResponseEntity.status(503).build(); // Service Unavailable
-        }
+        List<EventoCompletoDTO> eventos = catedraApiClient.getEventosCompletos();
+        return ResponseEntity.ok(eventos);
     }
 
     /**
@@ -74,24 +62,8 @@ public class EventoController {
     @GetMapping("/{id}")
     public ResponseEntity<EventoCompletoDTO> getEventoById(@PathVariable Long id) {
         log.info("GET /api/eventos/{} - Consultando detalle de evento", id);
-        
-        try {
-            EventoCompletoDTO evento = catedraApiClient.getEventoById(id);
-            
-            if (evento == null) {
-                return ResponseEntity.notFound().build();
-            }
-            
-            return ResponseEntity.ok(evento);
-        } catch (Exception e) {
-            log.error("Error al obtener evento {}: {}", id, e.getMessage());
-            
-            // Si el error es 404, devolver 404; de lo contrario 503
-            if (e.getMessage() != null && e.getMessage().contains("404")) {
-                return ResponseEntity.notFound().build();
-            }
-            return ResponseEntity.status(503).build(); // Service Unavailable
-        }
+        EventoCompletoDTO evento = catedraApiClient.getEventoById(id);
+        return ResponseEntity.ok(evento);
     }
 }
 
