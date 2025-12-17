@@ -66,22 +66,9 @@ public class VentaController {
                 request.getPrecioVenta(),
                 request.getAsientos().size());
         
-        try {
-            RealizarVentaResponseDTO response = catedraApiClient.realizarVenta(request);
-            
-            if (response == null) {
-                log.error("Respuesta nula del servicio de cátedra");
-                return ResponseEntity.status(503).build(); // Service Unavailable
-            }
-            
-            // Devolver 200 OK siempre, el campo "resultado" indica si la venta fue exitosa
-            return ResponseEntity.ok(response);
-            
-        } catch (Exception e) {
-            log.error("Error al realizar venta para evento {}: {}", 
-                    request.getEventoId(), e.getMessage());
-            return ResponseEntity.status(503).build(); // Service Unavailable
-        }
+        RealizarVentaResponseDTO response = catedraApiClient.realizarVenta(request);
+        // Devolver 200 OK siempre, el campo "resultado" indica si la venta fue exitosa
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -107,14 +94,8 @@ public class VentaController {
     @GetMapping
     public ResponseEntity<List<VentaResumenDTO>> getVentas() {
         log.info("GET /api/ventas - Consultando lista de ventas");
-        
-        try {
-            List<VentaResumenDTO> ventas = catedraApiClient.getVentas();
-            return ResponseEntity.ok(ventas);
-        } catch (Exception e) {
-            log.error("Error al obtener ventas: {}", e.getMessage());
-            return ResponseEntity.status(503).build(); // Service Unavailable
-        }
+        List<VentaResumenDTO> ventas = catedraApiClient.getVentas();
+        return ResponseEntity.ok(ventas);
     }
 
     /**
@@ -157,24 +138,8 @@ public class VentaController {
     @GetMapping("/{id}")
     public ResponseEntity<VentaDetalleDTO> getVentaById(@PathVariable Long id) {
         log.info("GET /api/ventas/{} - Consultando detalle de venta", id);
-        
-        try {
-            VentaDetalleDTO venta = catedraApiClient.getVentaById(id);
-            
-            if (venta == null) {
-                return ResponseEntity.notFound().build();
-            }
-            
-            return ResponseEntity.ok(venta);
-        } catch (Exception e) {
-            log.error("Error al obtener venta {}: {}", id, e.getMessage());
-            
-            // Si el error es 404, devolver 404; de lo contrario 503
-            if (e.getMessage() != null && e.getMessage().contains("404")) {
-                return ResponseEntity.notFound().build();
-            }
-            return ResponseEntity.status(503).build(); // Service Unavailable
-        }
+        VentaDetalleDTO venta = catedraApiClient.getVentaById(id);
+        return ResponseEntity.ok(venta);
     }
 }
 

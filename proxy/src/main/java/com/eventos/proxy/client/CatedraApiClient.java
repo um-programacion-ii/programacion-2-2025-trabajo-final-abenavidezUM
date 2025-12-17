@@ -6,6 +6,8 @@ import com.eventos.proxy.dto.RealizarVentaRequestDTO;
 import com.eventos.proxy.dto.RealizarVentaResponseDTO;
 import com.eventos.proxy.dto.VentaResumenDTO;
 import com.eventos.proxy.dto.VentaDetalleDTO;
+import com.eventos.proxy.exception.CatedraServiceException;
+import com.eventos.proxy.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -14,6 +16,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -75,7 +78,7 @@ public class CatedraApiClient {
             return response.getBody();
         } catch (RestClientException e) {
             log.error("Error al obtener eventos resumidos: {}", e.getMessage());
-            throw new RuntimeException("Error al consultar eventos resumidos de la cátedra", e);
+            throw new CatedraServiceException("Error al consultar eventos resumidos de la cátedra", e);
         }
     }
 
@@ -98,7 +101,7 @@ public class CatedraApiClient {
             return response.getBody();
         } catch (RestClientException e) {
             log.error("Error al obtener eventos completos: {}", e.getMessage());
-            throw new RuntimeException("Error al consultar eventos completos de la cátedra", e);
+            throw new CatedraServiceException("Error al consultar eventos completos de la cátedra", e);
         }
     }
 
@@ -117,9 +120,12 @@ public class CatedraApiClient {
             
             log.info("Obtenido evento ID: {}", id);
             return response.getBody();
+        } catch (HttpClientErrorException.NotFound e) {
+            log.warn("Evento {} no encontrado", id);
+            throw new ResourceNotFoundException("Evento", id);
         } catch (RestClientException e) {
             log.error("Error al obtener evento {}: {}", id, e.getMessage());
-            throw new RuntimeException("Error al consultar evento " + id + " de la cátedra", e);
+            throw new CatedraServiceException("Error al consultar evento " + id + " de la cátedra", e);
         }
     }
 
@@ -154,7 +160,7 @@ public class CatedraApiClient {
         } catch (RestClientException e) {
             log.error("Error al realizar venta para evento {}: {}", 
                     request.getEventoId(), e.getMessage());
-            throw new RuntimeException("Error al realizar venta en la cátedra", e);
+            throw new CatedraServiceException("Error al realizar venta en la cátedra", e);
         }
     }
 
@@ -180,7 +186,7 @@ public class CatedraApiClient {
             return response.getBody();
         } catch (RestClientException e) {
             log.error("Error al obtener ventas: {}", e.getMessage());
-            throw new RuntimeException("Error al consultar ventas de la cátedra", e);
+            throw new CatedraServiceException("Error al consultar ventas de la cátedra", e);
         }
     }
 
@@ -202,9 +208,12 @@ public class CatedraApiClient {
             
             log.info("Obtenida venta ID: {}", id);
             return response.getBody();
+        } catch (HttpClientErrorException.NotFound e) {
+            log.warn("Venta {} no encontrada", id);
+            throw new ResourceNotFoundException("Venta", id);
         } catch (RestClientException e) {
             log.error("Error al obtener venta {}: {}", id, e.getMessage());
-            throw new RuntimeException("Error al consultar venta " + id + " de la cátedra", e);
+            throw new CatedraServiceException("Error al consultar venta " + id + " de la cátedra", e);
         }
     }
 }
