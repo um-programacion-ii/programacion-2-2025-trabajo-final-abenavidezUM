@@ -44,6 +44,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/api/eventos/public/**",
+                                "/api/admin/notificaciones/**", // Endpoints para recibir notificaciones del proxy
                                 "/actuator/health",
                                 "/actuator/info",
                                 // Swagger/OpenAPI endpoints
@@ -89,7 +90,8 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:3000",
                 "http://localhost:8080",
-                "http://localhost:8081"
+                "http://localhost:8081",
+                "http://localhost:8082" // Proxy service
         ));
         
         // Métodos HTTP permitidos
