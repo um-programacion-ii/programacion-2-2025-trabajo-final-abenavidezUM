@@ -5,6 +5,7 @@ import com.eventos.backend.dto.*;
 import com.eventos.backend.dto.catedra.CatedraAsientoDTO;
 import com.eventos.backend.dto.catedra.CatedraBloquearAsientosRequestDTO;
 import com.eventos.backend.dto.catedra.CatedraBloquearAsientosResponseDTO;
+import com.eventos.backend.dto.proxy.ProxyEstadoAsientoResponseDTO;
 import com.eventos.backend.exception.BadRequestException;
 import com.eventos.backend.exception.ResourceNotFoundException;
 import com.eventos.backend.repository.EventoRepository;
@@ -29,6 +30,7 @@ public class AsientoService {
     private final EventoRepository eventoRepository;
     private final CatedraApiClient catedraApiClient;
     private final SesionCompraService sesionCompraService;
+    private final ProxyClient proxyClient;
 
     private static final int MAX_ASIENTOS = 4;
     private static final int BLOQUEO_TIMEOUT_MINUTOS = 5;
@@ -68,10 +70,25 @@ public class AsientoService {
             for (int col = 1; col <= totalColumnas; col++) {
                 String estado = EstadoAsientoDTO.LIBRE;
                 
-                // TODO: Consultar estado real desde Redis de cátedra vía Proxy
-                // Por ahora, asumimos todos libres excepto los seleccionados por el usuario
+                // Consultar estado real desde Redis de cátedra vía Proxy
+                if (evento.getIdExterno() != null) {
+                    try {
+                        ProxyEstadoAsientoResponseDTO estadoProxy = 
+                                proxyClient.obtenerEstadoAsiento(evento.getIdExterno(), fila, col);
+                        
+                        if (estadoProxy != null && estadoProxy.getEstado() != null) {
+                            // Mapear estados del proxy a estados del frontend
+                            estado = mapearEstadoDeProxy(estadoProxy.getEstado());
+                            log.debug("Estado asiento {}:{} desde proxy: {} -> {}", 
+                                    fila, col, estadoProxy.getEstado(), estado);
+                        }
+                    } catch (Exception e) {
+                        log.warn("Error al consultar estado de asiento {}:{} en proxy, usando LIBRE por defecto", 
+                                fila, col);
+                    }
+                }
                 
-                // Verificar si está seleccionado en sesión actual
+                // Verificar si está seleccionado en sesión actual (tiene prioridad)
                 if (sesionActual != null && sesionActual.getEventoId().equals(eventoId)) {
                     final int f = fila;
                     final int c = col;
@@ -204,6 +221,34 @@ public class AsientoService {
         
         sesionCompraService.limpiarSesion();
         log.info("Sesión y asientos liberados");
+    }
+
+    /**
+     * Mapea estados del proxy (Redis de cátedra) a estados del frontend
+     * 
+     * Estados del proxy: LIBRE, BLOQUEADO, VENDIDO, OCUPADO
+     * Estados del frontend: LIBRE, BLOQUEADO, OCUPADO, SELECCIONADO
+     * 
+     * @param estadoProxy Estado desde Redis de cátedra
+     * @return Estado para el frontend
+     */
+    private String mapearEstadoDeProxy(String estadoProxy) {
+        if (estadoProxy == null) {
+            return EstadoAsientoDTO.LIBRE;
+        }
+        
+        switch (estadoProxy.toUpperCase()) {
+            case "LIBRE":
+                return EstadoAsientoDTO.LIBRE;
+            case "BLOQUEADO":
+                return EstadoAsientoDTO.BLOQUEADO;
+            case "VENDIDO":
+            case "OCUPADO":
+                return EstadoAsientoDTO.OCUPADO;
+            default:
+                log.warn("Estado desconocido desde proxy: {}", estadoProxy);
+                return EstadoAsientoDTO.LIBRE;
+        }
     }
 }
 

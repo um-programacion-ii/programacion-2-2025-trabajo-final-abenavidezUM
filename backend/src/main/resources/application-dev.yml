@@ -49,8 +49,8 @@ jwt:
 
 catedra:
   api:
-    url: http://localhost:9090
-    token: token_pendiente
+    url: http://192.168.194.250:8080
+    token: eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhYmVuYXZpZGV6IiwiZXhwIjoxNzY4NDkyMjAzLCJhdXRoIjoiUk9MRV9VU0VSIiwiaWF0IjoxNzY1OTAwMjAzfQ.wnpFVD6OYubRD_c-rBpaKET4AQ6YWlnr8nk4B3sliQsNxXOlpE-QzKmG89a6meLrKV7ChnAKbum1qTSKk95zhA
 
 session:
   timeout-minutes: 30
@@ -63,4 +63,8 @@ logging:
     org.springframework.web: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+proxy:
+  url: http://localhost:8082
+  base-path: /proxy/api
 

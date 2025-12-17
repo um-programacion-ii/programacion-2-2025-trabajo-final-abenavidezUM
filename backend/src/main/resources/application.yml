@@ -45,3 +45,8 @@ sesion:
   compra:
     ttl-minutos: ${SESION_COMPRA_TTL:30} # 30 minutos por defecto
 
+# Servicio Proxy (Redis y Kafka de cátedra)
+proxy:
+  url: ${PROXY_URL:http://localhost:8082}
+  base-path: ${PROXY_BASE_PATH:/proxy/api}
+
