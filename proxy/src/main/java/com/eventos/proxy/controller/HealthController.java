@@ -1,6 +1,7 @@
 package com.eventos.proxy.controller;
 
-import com.eventos.proxy.client.CatedraApiClient;
+import com.eventos.proxy.service.BackendNotificationService;
+import com.eventos.proxy.service.CatedraRedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,20 +19,30 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class HealthController {
 
-    private final CatedraApiClient catedraApiClient;
+    private final CatedraRedisService catedraRedisService;
+    private final BackendNotificationService backendNotificationService;
 
     /**
-     * Health check básico del proxy
+     * Health check del proxy verificando conexiones a Redis de cátedra y backend
+     * 
+     * GET /proxy/api/health
      */
     @GetMapping
     public ResponseEntity<Map<String, Object>> health() {
         Map<String, Object> health = new HashMap<>();
-        health.put("status", "UP");
         health.put("service", "proxy-service");
         
-        // Verificar conectividad con API de cátedra
-        boolean catedraAvailable = catedraApiClient.isApiAvailable();
-        health.put("catedra_api", catedraAvailable ? "UP" : "DOWN");
+        // Verificar conectividad con Redis de cátedra
+        boolean redisAvailable = catedraRedisService.isRedisAvailable();
+        health.put("catedra_redis", redisAvailable ? "UP" : "DOWN");
+        
+        // Verificar conectividad con backend
+        boolean backendAvailable = backendNotificationService.isBackendAvailable();
+        health.put("backend", backendAvailable ? "UP" : "DOWN");
+        
+        // Estado general
+        boolean allUp = redisAvailable && backendAvailable;
+        health.put("status", allUp ? "UP" : "DEGRADED");
         
         return ResponseEntity.ok(health);
     }
