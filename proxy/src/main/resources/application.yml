@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: proxy-service
+  profiles:
+    active: dev
+
+server:
+  port: 8082
+  servlet:
+    context-path: /proxy
+
+logging:
+  level:
+    root: INFO
+    com.eventos.proxy: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Configuración de la API de cátedra
+catedra:
+  api:
+    url: ${CATEDRA_API_URL:http://192.168.194.250:8080}
+    token: ${CATEDRA_API_TOKEN:}
+

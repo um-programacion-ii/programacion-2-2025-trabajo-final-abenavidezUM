@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: proxy-service-dev
+
+server:
+  port: 8082
+
+logging:
+  level:
+    root: DEBUG
+    com.eventos.proxy: TRACE
+    org.springframework.web: DEBUG
+
+catedra:
+  api:
+    url: http://192.168.194.250:8080
+    token: eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhYmVuYXZpZGV6IiwiZXhwIjoxNzY4NDkyMjAzLCJhdXRoIjoiUk9MRV9VU0VSIiwiaWF0IjoxNzY1OTAwMjAzfQ.wnpFVD6OYubRD_c-rBpaKET4AQ6YWlnr8nk4B3sliQsNxXOlpE-QzKmG89a6meLrKV7ChnAKbum1qTSKk95zhA
+
