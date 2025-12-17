@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: proxy-service-prod
+
+server:
+  port: 8082
+
+logging:
+  level:
+    root: WARN
+    com.eventos.proxy: INFO
+
+catedra:
+  api:
+    url: ${CATEDRA_API_URL}
+    token: ${CATEDRA_API_TOKEN}
+
