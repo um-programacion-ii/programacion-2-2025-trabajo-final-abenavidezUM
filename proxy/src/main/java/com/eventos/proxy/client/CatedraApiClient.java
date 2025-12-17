@@ -2,6 +2,10 @@ package com.eventos.proxy.client;
 
 import com.eventos.proxy.dto.EventoCompletoDTO;
 import com.eventos.proxy.dto.EventoResumenDTO;
+import com.eventos.proxy.dto.RealizarVentaRequestDTO;
+import com.eventos.proxy.dto.RealizarVentaResponseDTO;
+import com.eventos.proxy.dto.VentaResumenDTO;
+import com.eventos.proxy.dto.VentaDetalleDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -116,6 +120,91 @@ public class CatedraApiClient {
         } catch (RestClientException e) {
             log.error("Error al obtener evento {}: {}", id, e.getMessage());
             throw new RuntimeException("Error al consultar evento " + id + " de la cátedra", e);
+        }
+    }
+
+    /**
+     * Realiza una venta de asientos para un evento
+     * Los asientos deben estar previamente bloqueados
+     * 
+     * @param request Petición con datos de la venta
+     * @return Respuesta con resultado de la venta
+     */
+    public RealizarVentaResponseDTO realizarVenta(RealizarVentaRequestDTO request) {
+        String url = buildUrl("/api/endpoints/v1/realizar-venta");
+        log.debug("POST {} - Realizando venta para evento {}", url, request.getEventoId());
+        
+        try {
+            ResponseEntity<RealizarVentaResponseDTO> response = restTemplate.postForEntity(
+                url,
+                request,
+                RealizarVentaResponseDTO.class
+            );
+            
+            RealizarVentaResponseDTO resultado = response.getBody();
+            
+            if (resultado != null) {
+                log.info("Venta - Evento: {}, VentaId: {}, Resultado: {}", 
+                        request.getEventoId(), 
+                        resultado.getVentaId(),
+                        resultado.getResultado());
+            }
+            
+            return resultado;
+        } catch (RestClientException e) {
+            log.error("Error al realizar venta para evento {}: {}", 
+                    request.getEventoId(), e.getMessage());
+            throw new RuntimeException("Error al realizar venta en la cátedra", e);
+        }
+    }
+
+    /**
+     * Obtiene la lista de todas las ventas del alumno
+     * Incluye ventas exitosas y fallidas
+     * 
+     * @return Lista de ventas resumidas
+     */
+    public List<VentaResumenDTO> getVentas() {
+        String url = buildUrl("/api/endpoints/v1/listar-ventas");
+        log.debug("GET {}", url);
+        
+        try {
+            ResponseEntity<List<VentaResumenDTO>> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<VentaResumenDTO>>() {}
+            );
+            
+            log.info("Obtenidas {} ventas", response.getBody() != null ? response.getBody().size() : 0);
+            return response.getBody();
+        } catch (RestClientException e) {
+            log.error("Error al obtener ventas: {}", e.getMessage());
+            throw new RuntimeException("Error al consultar ventas de la cátedra", e);
+        }
+    }
+
+    /**
+     * Obtiene el detalle de una venta específica por ID
+     * 
+     * @param id ID de la venta
+     * @return Detalle de la venta
+     */
+    public VentaDetalleDTO getVentaById(Long id) {
+        String url = buildUrl("/api/endpoints/v1/listar-venta/" + id);
+        log.debug("GET {}", url);
+        
+        try {
+            ResponseEntity<VentaDetalleDTO> response = restTemplate.getForEntity(
+                url,
+                VentaDetalleDTO.class
+            );
+            
+            log.info("Obtenida venta ID: {}", id);
+            return response.getBody();
+        } catch (RestClientException e) {
+            log.error("Error al obtener venta {}: {}", id, e.getMessage());
+            throw new RuntimeException("Error al consultar venta " + id + " de la cátedra", e);
         }
     }
 }
