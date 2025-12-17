@@ -26,9 +26,20 @@ management:
     health:
       show-details: when-authorized
 
-# Configuración de la API de cátedra
+# Configuración de Redis de cátedra (para consultar estado de asientos)
 catedra:
-  api:
-    url: ${CATEDRA_API_URL:http://192.168.194.250:8080}
-    token: ${CATEDRA_API_TOKEN:}
+  redis:
+    host: ${CATEDRA_REDIS_HOST:192.168.194.250}
+    port: ${CATEDRA_REDIS_PORT:6379}
+    password: ${CATEDRA_REDIS_PASSWORD:}
+    database: ${CATEDRA_REDIS_DATABASE:0}
+  kafka:
+    bootstrap-servers: ${CATEDRA_KAFKA_BOOTSTRAP:192.168.194.250:9092}
+    group-id: ${CATEDRA_KAFKA_GROUP_ID:proxy-service-group}
+    topic: ${CATEDRA_KAFKA_TOPIC:eventos-cambios}
+
+# Configuración del backend (para enviar notificaciones)
+backend:
+  url: ${BACKEND_URL:http://localhost:8080}
+  notification-endpoint: ${BACKEND_NOTIFICATION_ENDPOINT:/api/admin/notificaciones/eventos}
 

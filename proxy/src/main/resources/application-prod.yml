@@ -1,17 +1,27 @@
 spring:
-  application:
-    name: proxy-service-prod
-
-server:
-  port: 8082
+  config:
+    activate:
+      on-profile: prod
 
 logging:
   level:
     root: WARN
     com.eventos.proxy: INFO
 
+# Configuración de Redis de cátedra (producción)
+# Usar variables de entorno
 catedra:
-  api:
-    url: ${CATEDRA_API_URL}
-    token: ${CATEDRA_API_TOKEN}
+  redis:
+    host: ${CATEDRA_REDIS_HOST}
+    port: ${CATEDRA_REDIS_PORT}
+    password: ${CATEDRA_REDIS_PASSWORD:}
+    database: ${CATEDRA_REDIS_DATABASE:0}
+  kafka:
+    bootstrap-servers: ${CATEDRA_KAFKA_BOOTSTRAP}
+    group-id: ${CATEDRA_KAFKA_GROUP_ID}
+    topic: ${CATEDRA_KAFKA_TOPIC}
 
+# Backend en producción
+backend:
+  url: ${BACKEND_URL}
+  notification-endpoint: ${BACKEND_NOTIFICATION_ENDPOINT}
