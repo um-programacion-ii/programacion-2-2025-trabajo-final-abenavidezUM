@@ -6,8 +6,8 @@ spring:
 
 server:
   port: 8080
-  servlet:
-    context-path: /api
+  #servlet:
+    #context-path: /api  # Deshabilitado - los controllers ya tienen /api en sus rutas
 
 logging:
   level:

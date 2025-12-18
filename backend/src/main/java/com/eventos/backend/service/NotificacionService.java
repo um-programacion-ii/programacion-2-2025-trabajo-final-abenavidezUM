@@ -92,7 +92,7 @@ public class NotificacionService {
         
         // Sincronizar eventos desde cátedra para incluir el nuevo
         try {
-            eventoSyncService.sincronizarEventos();
+            eventoSyncService.sincronizarTodos();
             log.info("Sincronización de eventos completada tras nuevo evento");
         } catch (Exception e) {
             log.error("Error al sincronizar eventos tras nuevo evento: {}", e.getMessage());
@@ -108,7 +108,7 @@ public class NotificacionService {
         
         // Sincronizar eventos para actualizar la información
         try {
-            eventoSyncService.sincronizarEventos();
+            eventoSyncService.sincronizarTodos();
             log.info("Sincronización de eventos completada tras actualización");
         } catch (Exception e) {
             log.error("Error al sincronizar eventos tras actualización: {}", e.getMessage());

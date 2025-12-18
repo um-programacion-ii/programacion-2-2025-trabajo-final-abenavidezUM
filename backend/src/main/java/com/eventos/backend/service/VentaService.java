@@ -141,7 +141,7 @@ public class VentaService {
                 .map(p -> CatedraAsientoDTO.builder()
                         .fila(p.getFila())
                         .columna(p.getColumna())
-                        .nombre(p.getNombre())
+                        .persona(p.getNombre())
                         .build())
                 .collect(Collectors.toList());
 
@@ -251,8 +251,8 @@ public class VentaService {
 
             int sincronizadas = 0;
             for (var ventaCatedra : ventasCatedra) {
-                if (ventaCatedra.getId() != null) {
-                    var ventaLocal = ventaRepository.findByIdExterno(ventaCatedra.getId());
+                if (ventaCatedra.getVentaId() != null) {
+                    var ventaLocal = ventaRepository.findByIdExterno(ventaCatedra.getVentaId());
                     if (ventaLocal.isPresent()) {
                         Venta venta = ventaLocal.get();
                         if (!venta.getConfirmadaCatedra()) {
