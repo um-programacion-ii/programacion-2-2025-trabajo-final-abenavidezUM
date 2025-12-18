@@ -1,5 +1,6 @@
 package com.eventos.backend.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -14,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 public class RedisService {
 
     private final RedisTemplate<String, Object> redisTemplate;
+    private final ObjectMapper objectMapper;
 
     // TTL por defecto de 30 minutos
     private static final long DEFAULT_TTL_MINUTES = 30;
@@ -53,9 +55,8 @@ public class RedisService {
     }
 
     /**
-     * Obtener un valor de Redis con cast automático
+     * Obtener un valor de Redis con conversión automática usando ObjectMapper
      */
-    @SuppressWarnings("unchecked")
     public <T> T get(String key, Class<T> clazz) {
         Object value = get(key);
         if (value == null) {
@@ -63,9 +64,15 @@ public class RedisService {
         }
         
         try {
-            return (T) value;
-        } catch (ClassCastException e) {
-            log.error("Error casting value for key: {}", key, e);
+            // Si el valor ya es del tipo correcto, devolverlo directamente
+            if (clazz.isInstance(value)) {
+                return clazz.cast(value);
+            }
+            
+            // Convertir usando ObjectMapper (maneja LinkedHashMap → DTO)
+            return objectMapper.convertValue(value, clazz);
+        } catch (Exception e) {
+            log.error("Error converting value for key: {} to class: {}", key, clazz.getName(), e);
             return null;
         }
     }
