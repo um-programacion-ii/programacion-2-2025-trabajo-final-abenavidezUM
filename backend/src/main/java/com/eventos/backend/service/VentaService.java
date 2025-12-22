@@ -41,6 +41,7 @@ public class VentaService {
     private final VentaMapper ventaMapper;
     private final CatedraApiClient catedraApiClient;
     private final SesionCompraService sesionCompraService;
+    private final ProxyClient proxyClient;
 
     private static final int MAX_REINTENTOS = 3;
 
@@ -63,12 +64,39 @@ public class VentaService {
             throw new BadRequestException("La sesión de compra no está completa");
         }
 
+        // Validar que los asientos estén bloqueados
+        if (!Boolean.TRUE.equals(sesion.getAsientosBloqueados())) {
+            throw new BadRequestException("Debe bloquear los asientos antes de realizar la venta");
+        }
+
         // Obtener evento
         Evento evento = eventoRepository.findById(sesion.getEventoId())
                 .orElseThrow(() -> new ResourceNotFoundException("Evento", "id", sesion.getEventoId()));
 
         if (!evento.getActivo()) {
             throw new BadRequestException("El evento no está disponible");
+        }
+
+        // Verificar disponibilidad de asientos en tiempo real
+        for (AsientoSeleccionadoDTO asiento : sesion.getAsientosSeleccionados()) {
+            try {
+                var estadoAsiento = proxyClient.obtenerEstadoAsiento(
+                    evento.getIdExterno(), 
+                    asiento.getFila(), 
+                    asiento.getColumna()
+                );
+                
+                if (estadoAsiento != null && !"BLOQUEADO".equals(estadoAsiento.getEstado())) {
+                    throw new BadRequestException(
+                        "El asiento " + asiento.getFila() + "-" + asiento.getColumna() + 
+                        " ya no está disponible (estado: " + estadoAsiento.getEstado() + ")"
+                    );
+                }
+            } catch (Exception e) {
+                log.warn("No se pudo verificar estado del asiento {}-{}: {}", 
+                    asiento.getFila(), asiento.getColumna(), e.getMessage());
+                // Continuar con la venta aunque no se pueda verificar
+            }
         }
 
         // Crear venta local
