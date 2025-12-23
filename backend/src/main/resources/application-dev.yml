@@ -50,7 +50,7 @@ jwt:
 catedra:
   api:
     url: http://192.168.194.250:8080
-    token: eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhYmVuYXZpZGV6IiwiZXhwIjoxNzY4NDkyMjAzLCJhdXRoIjoiUk9MRV9VU0VSIiwiaWF0IjoxNzY1OTAwMjAzfQ.wnpFVD6OYubRD_c-rBpaKET4AQ6YWlnr8nk4B3sliQsNxXOlpE-QzKmG89a6meLrKV7ChnAKbum1qTSKk95zhA
+    token: eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhYmVuYXZpZGV6dW1fMTc2NjQyNDcxOCIsImV4cCI6MTc2OTAxNjcxOSwiYXV0aCI6IlJPTEVfVVNFUiIsImlhdCI6MTc2NjQyNDcxOX0.vF3Nbl_u2fQPBctLLDqtmwkfC7nJY9WramkOBbZhjj7DTNeyEm3noa1MVgJCwYeSnMgeaLe6p0z8VINUYz5o_Q
 
 session:
   timeout-minutes: 30

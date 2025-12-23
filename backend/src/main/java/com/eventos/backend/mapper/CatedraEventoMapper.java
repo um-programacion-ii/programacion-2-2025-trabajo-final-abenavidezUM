@@ -56,6 +56,10 @@ public class CatedraEventoMapper {
             }
 
             // Crear el evento
+            // Usar valores por defecto si no están especificados (10 filas x 16 columnas)
+            Integer filas = catedraEvento.getFilaAsientos() != null ? catedraEvento.getFilaAsientos() : 10;
+            Integer columnas = catedraEvento.getColumnAsientos() != null ? catedraEvento.getColumnAsientos() : 16;
+            
             Evento evento = Evento.builder()
                     .idExterno(catedraEvento.getId())
                     .titulo(catedraEvento.getTitulo())
@@ -64,8 +68,8 @@ public class CatedraEventoMapper {
                     .fecha(fecha != null ? fecha.toLocalDateTime() : null)
                     .direccion(catedraEvento.getDireccion())
                     .imagen(catedraEvento.getImagen())
-                    .filaAsientos(catedraEvento.getFilaAsientos())
-                    .columnaAsientos(catedraEvento.getColumnAsientos())
+                    .filaAsientos(filas)
+                    .columnaAsientos(columnas)
                     .precioEntrada(catedraEvento.getPrecioEntrada())
                     .tipoEvento(tipoEvento)
                     .activo(true)
@@ -121,8 +125,14 @@ public class CatedraEventoMapper {
             eventoExistente.setDescripcion(catedraEvento.getDescripcion());
             eventoExistente.setDireccion(catedraEvento.getDireccion());
             eventoExistente.setImagen(catedraEvento.getImagen());
-            eventoExistente.setFilaAsientos(catedraEvento.getFilaAsientos());
-            eventoExistente.setColumnaAsientos(catedraEvento.getColumnAsientos());
+            
+            // Usar valores por defecto si no están especificados (10 filas x 16 columnas)
+            eventoExistente.setFilaAsientos(
+                catedraEvento.getFilaAsientos() != null ? catedraEvento.getFilaAsientos() : 10
+            );
+            eventoExistente.setColumnaAsientos(
+                catedraEvento.getColumnAsientos() != null ? catedraEvento.getColumnAsientos() : 16
+            );
             eventoExistente.setPrecioEntrada(catedraEvento.getPrecioEntrada());
 
             // Actualizar fecha
