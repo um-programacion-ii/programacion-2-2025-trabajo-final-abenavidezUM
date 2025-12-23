@@ -174,8 +174,8 @@ public class AsientoService {
             CatedraBloquearAsientosResponseDTO response = catedraApiClient.bloquearAsientos(request);
 
             if (response != null && Boolean.TRUE.equals(response.getResultado())) {
-                // Actualizar sesión de compra
-                sesionCompraService.actualizarAsientos(asientos);
+                // Marcar asientos como bloqueados en la sesión
+                // NO llamar a actualizarAsientos() porque borraría las personas ya cargadas
                 sesionCompraService.marcarAsientosBloqueados();
 
                 log.info("Asientos bloqueados exitosamente");
