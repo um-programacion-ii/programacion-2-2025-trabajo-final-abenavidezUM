@@ -36,6 +36,7 @@ public class Usuario {
     private String email;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean enabled = true;
 
     @Column(name = "created_at", updatable = false)

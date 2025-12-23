@@ -1,15 +1,15 @@
-package com.eventos.backend.service;
+package com.eventos.backend.infrastructure.adapter.output.external.service;
 
-import com.eventos.backend.domain.Usuario;
+import com.eventos.backend.domain.model.Usuario;
 import com.eventos.backend.dto.ChangePasswordRequestDTO;
 import com.eventos.backend.dto.UpdateUsuarioRequestDTO;
 import com.eventos.backend.dto.UsuarioDTO;
-import com.eventos.backend.exception.BadRequestException;
-import com.eventos.backend.exception.ConflictException;
-import com.eventos.backend.exception.ForbiddenException;
-import com.eventos.backend.exception.ResourceNotFoundException;
-import com.eventos.backend.mapper.UsuarioMapper;
-import com.eventos.backend.repository.UsuarioRepository;
+import com.eventos.backend.domain.exception.BadRequestException;
+import com.eventos.backend.domain.exception.ConflictException;
+import com.eventos.backend.domain.exception.ForbiddenException;
+import com.eventos.backend.domain.exception.ResourceNotFoundException;
+import com.eventos.backend.infrastructure.mapper.UsuarioMapper;
+import com.eventos.backend.infrastructure.adapter.output.persistence.repository.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,7 +1,7 @@
-package com.eventos.backend.kafka;
+package com.eventos.backend.infrastructure.adapter.input.kafka;
 
 import com.eventos.backend.dto.kafka.EventoKafkaMessageDTO;
-import com.eventos.backend.service.EventoSyncService;
+import com.eventos.backend.infrastructure.adapter.output.external.service.EventoSyncService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,4 +1,4 @@
-package com.eventos.backend.service;
+package com.eventos.backend.infrastructure.adapter.output.external.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
