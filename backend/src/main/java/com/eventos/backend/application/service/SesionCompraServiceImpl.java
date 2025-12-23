@@ -1,4 +1,4 @@
-package com.eventos.backend.service;
+package com.eventos.backend.application.service;
 
 import com.eventos.backend.domain.model.Evento;
 import com.eventos.backend.domain.model.Usuario;
@@ -8,6 +8,7 @@ import com.eventos.backend.domain.exception.ConflictException;
 import com.eventos.backend.domain.exception.ResourceNotFoundException;
 import com.eventos.backend.infrastructure.adapter.output.persistence.repository.EventoRepository;
 import com.eventos.backend.infrastructure.adapter.output.persistence.repository.UsuarioRepository;
+import com.eventos.backend.infrastructure.adapter.output.external.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class SesionCompraService {
+public class SesionCompraServiceImpl {
 
     private final RedisService redisService;
     private final EventoRepository eventoRepository;

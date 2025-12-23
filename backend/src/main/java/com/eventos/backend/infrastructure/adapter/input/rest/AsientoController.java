@@ -3,7 +3,7 @@ package com.eventos.backend.infrastructure.adapter.input.rest;
 import com.eventos.backend.dto.BloquearAsientosRequestDTO;
 import com.eventos.backend.dto.BloquearAsientosResponseDTO;
 import com.eventos.backend.dto.MapaAsientosDTO;
-import com.eventos.backend.infrastructure.adapter.output.external.service.AsientoService;
+import com.eventos.backend.application.service.AsientoServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +21,7 @@ import java.util.Map;
 @Slf4j
 public class AsientoController {
 
-    private final AsientoService asientoService;
+    private final AsientoServiceImpl asientoService;
 
     /**
      * GET /api/asientos/evento/{eventoId}

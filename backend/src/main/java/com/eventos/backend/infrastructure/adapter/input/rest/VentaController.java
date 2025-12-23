@@ -1,7 +1,7 @@
 package com.eventos.backend.infrastructure.adapter.input.rest;
 
 import com.eventos.backend.dto.VentaDTO;
-import com.eventos.backend.infrastructure.adapter.output.external.service.VentaService;
+import com.eventos.backend.application.service.VentaServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -21,7 +21,7 @@ import java.util.List;
 @Slf4j
 public class VentaController {
 
-    private final VentaService ventaService;
+    private final VentaServiceImpl ventaService;
 
     /**
      * POST /api/ventas

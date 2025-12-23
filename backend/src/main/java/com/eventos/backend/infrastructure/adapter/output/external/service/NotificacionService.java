@@ -1,5 +1,6 @@
 package com.eventos.backend.infrastructure.adapter.output.external.service;
 
+import com.eventos.backend.application.service.SesionCompraServiceImpl;
 import com.eventos.backend.dto.notificacion.NotificacionAsientoDTO;
 import com.eventos.backend.dto.notificacion.NotificacionEventoDTO;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,7 @@ import org.springframework.stereotype.Service;
 public class NotificacionService {
 
     private final EventoSyncService eventoSyncService;
-    private final SesionCompraService sesionCompraService;
+    private final SesionCompraServiceImpl sesionCompraService;
 
     /**
      * Procesa una notificación de cambio en un evento

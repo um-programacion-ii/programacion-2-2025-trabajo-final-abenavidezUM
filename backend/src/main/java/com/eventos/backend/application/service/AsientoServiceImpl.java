@@ -1,4 +1,4 @@
-package com.eventos.backend.service;
+package com.eventos.backend.application.service;
 
 import com.eventos.backend.domain.model.Evento;
 import com.eventos.backend.dto.*;
@@ -8,6 +8,9 @@ import com.eventos.backend.dto.catedra.CatedraBloquearAsientosResponseDTO;
 import com.eventos.backend.dto.proxy.ProxyEstadoAsientoResponseDTO;
 import com.eventos.backend.domain.exception.BadRequestException;
 import com.eventos.backend.domain.exception.ResourceNotFoundException;
+import com.eventos.backend.infrastructure.adapter.output.external.service.CatedraApiClient;
+import com.eventos.backend.infrastructure.adapter.output.external.service.ProxyClient;
+import com.eventos.backend.application.service.SesionCompraServiceImpl;
 import com.eventos.backend.infrastructure.adapter.output.persistence.repository.EventoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,11 +28,11 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AsientoService {
+public class AsientoServiceImpl {
 
     private final EventoRepository eventoRepository;
     private final CatedraApiClient catedraApiClient;
-    private final SesionCompraService sesionCompraService;
+    private final SesionCompraServiceImpl sesionCompraService;
     private final ProxyClient proxyClient;
 
     private static final int MAX_ASIENTOS = 4;

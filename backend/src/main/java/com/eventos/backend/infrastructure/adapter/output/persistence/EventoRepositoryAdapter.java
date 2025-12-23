@@ -36,7 +36,7 @@ public class EventoRepositoryAdapter implements EventoRepositoryPort {
 
     @Override
     public List<Evento> findAllActivos() {
-        return eventoRepository.findAllActivos();
+        return eventoRepository.findAllActive();
     }
 
     @Override

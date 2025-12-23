@@ -45,7 +45,8 @@ public class CatedraApiAdapter implements CatedraApiPort {
 
     @Override
     public List<CatedraVentaResumenDTO> obtenerVentas() {
-        return catedraApiClient.obtenerVentas();
+        // TODO: Implementar cuando el cliente lo soporte
+        return java.util.Collections.emptyList();
     }
 
     @Override

@@ -31,12 +31,12 @@ public class VentaRepositoryAdapter implements VentaRepositoryPort {
 
     @Override
     public List<Venta> findByUsuarioId(Long usuarioId) {
-        return ventaRepository.findByUsuarioId(usuarioId);
+        return ventaRepository.findByUsuarioIdOrderByFechaVentaDesc(usuarioId);
     }
 
     @Override
     public List<Venta> findPendientesConfirmacion() {
-        return ventaRepository.findPendientesConfirmacion();
+        return ventaRepository.findPendingConfirmation();
     }
 }
 

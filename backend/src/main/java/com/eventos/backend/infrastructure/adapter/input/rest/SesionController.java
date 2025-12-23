@@ -1,7 +1,7 @@
 package com.eventos.backend.infrastructure.adapter.input.rest;
 
 import com.eventos.backend.dto.*;
-import com.eventos.backend.infrastructure.adapter.output.external.service.SesionCompraService;
+import com.eventos.backend.application.service.SesionCompraServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +19,7 @@ import java.util.Map;
 @Slf4j
 public class SesionController {
 
-    private final SesionCompraService sesionCompraService;
+    private final SesionCompraServiceImpl sesionCompraService;
 
     /**
      * POST /api/sesion/iniciar

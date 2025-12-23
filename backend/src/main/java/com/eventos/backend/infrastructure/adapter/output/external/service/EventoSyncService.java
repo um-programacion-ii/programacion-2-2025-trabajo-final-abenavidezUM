@@ -1,5 +1,6 @@
 package com.eventos.backend.infrastructure.adapter.output.external.service;
 
+import com.eventos.backend.application.service.EventoServiceImpl;
 import com.eventos.backend.domain.model.Evento;
 import com.eventos.backend.dto.catedra.CatedraEventoCompletoDTO;
 import com.eventos.backend.infrastructure.mapper.CatedraEventoMapper;
@@ -22,13 +23,13 @@ public class EventoSyncService {
     private final CatedraApiClient catedraApiClient;
     private final EventoRepository eventoRepository;
     private final CatedraEventoMapper catedraEventoMapper;
-    private final EventoService eventoService;
+    private final EventoServiceImpl eventoService;
 
     public EventoSyncService(
             CatedraApiClient catedraApiClient,
             EventoRepository eventoRepository,
             CatedraEventoMapper catedraEventoMapper,
-            @Lazy EventoService eventoService) {
+            @Lazy EventoServiceImpl eventoService) {
         this.catedraApiClient = catedraApiClient;
         this.eventoRepository = eventoRepository;
         this.catedraEventoMapper = catedraEventoMapper;
