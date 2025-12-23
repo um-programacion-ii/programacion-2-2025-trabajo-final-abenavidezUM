@@ -2,7 +2,7 @@ package com.eventos.backend.infrastructure.adapter.input.rest;
 
 import com.eventos.backend.dto.EventoDetalleDTO;
 import com.eventos.backend.dto.EventoResumenDTO;
-import com.eventos.backend.infrastructure.adapter.output.external.service.EventoService;
+import com.eventos.backend.application.service.EventoServiceImpl;
 import com.eventos.backend.infrastructure.adapter.output.external.service.EventoSyncService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +28,7 @@ import java.util.Map;
 @Slf4j
 public class EventoController {
 
-    private final EventoService eventoService;
+    private final EventoServiceImpl eventoService;
     private final EventoSyncService eventoSyncService;
 
     // ==================== ENDPOINTS PÚBLICOS ====================

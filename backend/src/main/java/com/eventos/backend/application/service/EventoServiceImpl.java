@@ -1,4 +1,4 @@
-package com.eventos.backend.service;
+package com.eventos.backend.application.service;
 
 import com.eventos.backend.domain.model.Evento;
 import com.eventos.backend.domain.model.TipoEvento;
@@ -7,6 +7,8 @@ import com.eventos.backend.dto.EventoResumenDTO;
 import com.eventos.backend.domain.exception.ResourceNotFoundException;
 import com.eventos.backend.infrastructure.mapper.EventoMapper;
 import com.eventos.backend.infrastructure.adapter.output.persistence.repository.EventoRepository;
+import com.eventos.backend.infrastructure.adapter.output.external.service.RedisService;
+import com.eventos.backend.infrastructure.adapter.output.external.service.EventoSyncService;
 import com.eventos.backend.infrastructure.adapter.output.persistence.repository.TipoEventoRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class EventoService {
+public class EventoServiceImpl {
 
     private final EventoRepository eventoRepository;
     private final TipoEventoRepository tipoEventoRepository;

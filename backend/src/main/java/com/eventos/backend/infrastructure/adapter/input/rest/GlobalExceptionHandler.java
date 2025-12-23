@@ -1,5 +1,6 @@
-package com.eventos.backend.exception;
+package com.eventos.backend.infrastructure.adapter.input.rest;
 
+import com.eventos.backend.domain.exception.*;
 import com.eventos.backend.dto.ErrorResponseDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;

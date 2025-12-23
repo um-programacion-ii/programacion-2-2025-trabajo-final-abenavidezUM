@@ -6,6 +6,7 @@ import com.eventos.backend.domain.ports.output.RedisCachePort;
 import com.eventos.backend.domain.ports.output.UsuarioRepositoryPort;
 import com.eventos.backend.domain.exception.ConflictException;
 import com.eventos.backend.domain.exception.ResourceNotFoundException;
+import com.eventos.backend.domain.exception.UnauthorizedException;
 import com.eventos.backend.dto.JwtResponseDTO;
 import com.eventos.backend.dto.LoginRequestDTO;
 import com.eventos.backend.dto.RegisterRequestDTO;
@@ -24,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Implementación del caso de uso de autenticación
- * Capa de aplicación - orquesta la lógica de negocio
+ * Capa de aplicación - orquesta la lógica de negocio de autenticación
  */
 @Service
 @RequiredArgsConstructor
@@ -43,6 +44,20 @@ public class AuthServiceImpl implements AutenticarUsuarioUseCase {
     @Override
     @Transactional(readOnly = true)
     public JwtResponseDTO autenticar(LoginRequestDTO loginRequest) {
+        return login(loginRequest);
+    }
+
+    @Override
+    @Transactional
+    public JwtResponseDTO registrarUsuario(RegisterRequestDTO registerRequest) {
+        return register(registerRequest);
+    }
+
+    /**
+     * Autenticar usuario y generar token JWT
+     */
+    @Transactional(readOnly = true)
+    public JwtResponseDTO login(LoginRequestDTO loginRequest) {
         // Autenticar credenciales
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -69,9 +84,11 @@ public class AuthServiceImpl implements AutenticarUsuarioUseCase {
         return new JwtResponseDTO(jwt, usuario.getUsername(), usuario.getEmail());
     }
 
-    @Override
+    /**
+     * Registrar nuevo usuario
+     */
     @Transactional
-    public JwtResponseDTO registrarUsuario(RegisterRequestDTO registerRequest) {
+    public JwtResponseDTO register(RegisterRequestDTO registerRequest) {
         // Validar que el username no exista
         if (usuarioRepository.existsByUsername(registerRequest.getUsername())) {
             throw new ConflictException("El username ya está en uso");
@@ -82,15 +99,16 @@ public class AuthServiceImpl implements AutenticarUsuarioUseCase {
             throw new ConflictException("El email ya está en uso");
         }
 
-        // Crear nuevo usuario
+        // Crear nuevo usuario (activo por defecto en la entidad Usuario)
         Usuario usuario = Usuario.builder()
                 .username(registerRequest.getUsername())
                 .email(registerRequest.getEmail())
                 .password(passwordEncoder.encode(registerRequest.getPassword()))
                 .firstName(registerRequest.getFirstName())
                 .lastName(registerRequest.getLastName())
-                .activo(true)
                 .build();
+        
+        // El campo activo se inicializa con true por defecto en la entidad
 
         // Guardar usuario
         usuario = usuarioRepository.save(usuario);
@@ -115,5 +133,87 @@ public class AuthServiceImpl implements AutenticarUsuarioUseCase {
         redisCache.save(redisKey, jwt, 1, TimeUnit.HOURS);
 
         return new JwtResponseDTO(jwt, usuario.getUsername(), usuario.getEmail());
+    }
+
+    /**
+     * Cerrar sesión (logout)
+     */
+    @Transactional
+    public void logout(String token) {
+        try {
+            // Extraer username del token
+            String username = tokenProvider.getUsernameFromToken(token);
+            
+            // Obtener usuario
+            Usuario usuario = usuarioRepository.findByUsername(username)
+                    .orElseThrow(() -> new ResourceNotFoundException("Usuario", "username", username));
+            
+            // Eliminar token de Redis
+            String redisKey = "auth:token:" + usuario.getId();
+            redisCache.delete(redisKey);
+            
+            // Limpiar contexto de seguridad
+            SecurityContextHolder.clearContext();
+            
+            log.info("Usuario cerró sesión: {}", username);
+        } catch (Exception e) {
+            log.error("Error al cerrar sesión: {}", e.getMessage());
+            throw new UnauthorizedException("Error al cerrar sesión");
+        }
+    }
+
+    /**
+     * Renovar token JWT
+     */
+    @Transactional(readOnly = true)
+    public JwtResponseDTO refreshToken(String oldToken) {
+        try {
+            // Validar token anterior
+            if (!tokenProvider.validateToken(oldToken)) {
+                throw new UnauthorizedException("Token inválido o expirado");
+            }
+            
+            // Extraer username
+            String username = tokenProvider.getUsernameFromToken(oldToken);
+            
+            // Obtener usuario
+            Usuario usuario = usuarioRepository.findByUsername(username)
+                    .orElseThrow(() -> new ResourceNotFoundException("Usuario", "username", username));
+            
+            // Crear nueva autenticación
+            Authentication authentication = new UsernamePasswordAuthenticationToken(
+                    username, null, null
+            );
+            
+            // Generar nuevo token
+            String newToken = tokenProvider.generateToken(authentication);
+            
+            // Actualizar en Redis
+            String redisKey = "auth:token:" + usuario.getId();
+            redisCache.delete(redisKey);
+            redisCache.save(redisKey, newToken, 1, TimeUnit.HOURS);
+            
+            log.info("Token renovado para usuario: {}", username);
+            
+            return new JwtResponseDTO(newToken, usuario.getUsername(), usuario.getEmail());
+        } catch (Exception e) {
+            log.error("Error al renovar token: {}", e.getMessage());
+            throw new UnauthorizedException("Error al renovar token");
+        }
+    }
+
+    /**
+     * Obtener usuario actual por token
+     */
+    @Transactional(readOnly = true)
+    public Usuario getCurrentUser(String token) {
+        try {
+            String username = tokenProvider.getUsernameFromToken(token);
+            return usuarioRepository.findByUsername(username)
+                    .orElseThrow(() -> new ResourceNotFoundException("Usuario", "username", username));
+        } catch (Exception e) {
+            log.error("Error al obtener usuario actual: {}", e.getMessage());
+            throw new UnauthorizedException("Error al obtener usuario actual");
+        }
     }
 }

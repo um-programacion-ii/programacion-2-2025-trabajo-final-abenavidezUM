@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Autenticación", description = "Endpoints para registro, login, logout y gestión de tokens JWT")
 public class AuthController {
 
-    private final AuthService authService;
+    private final AuthServiceImpl authService;
     private final UsuarioMapper usuarioMapper;
 
     @Operation(
