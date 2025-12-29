@@ -22,3 +22,4 @@ public class VentaResumenDTO {
     private Integer cantidadAsientos;
 }
 
+

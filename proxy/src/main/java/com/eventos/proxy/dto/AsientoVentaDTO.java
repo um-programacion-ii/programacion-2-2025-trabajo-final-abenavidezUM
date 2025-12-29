@@ -19,3 +19,4 @@ public class AsientoVentaDTO {
     private String estado; // "Vendido", "Libre", "Ocupado"
 }
 
+

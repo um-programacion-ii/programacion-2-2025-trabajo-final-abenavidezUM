@@ -21,3 +21,4 @@ public class BloquearAsientosResponseDTO {
     private List<AsientoEstadoDTO> asientos;
 }
 
+

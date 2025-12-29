@@ -19,3 +19,4 @@ public class BloquearAsientosRequestDTO {
     private List<AsientoDTO> asientos;
 }
 
+

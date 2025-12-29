@@ -14,10 +14,22 @@ class AsientoRepository {
     
     suspend fun getMapaAsientos(eventoId: Long): Result<MapaAsientos> {
         return try {
-            val response = client.get("/api/asientos/$eventoId/mapa")
+            println("AsientoRepository: Obteniendo mapa de asientos para evento $eventoId...")
+            val response = client.get("/api/asientos/evento/$eventoId") {
+                // ✅ Agregar token manualmente
+                ApiClient.getAuthToken()?.let { token ->
+                    headers {
+                        append("Authorization", "Bearer $token")
+                    }
+                    println("AsientoRepository: Token agregado: ${token.take(20)}...")
+                }
+            }
             val mapa: MapaAsientos = response.body()
+            println("AsientoRepository: Mapa obtenido exitosamente")
             Result.success(mapa)
         } catch (e: Exception) {
+            println("AsientoRepository: Error al obtener mapa: ${e.message}")
+            e.printStackTrace()
             Result.failure(e)
         }
     }
@@ -27,13 +39,24 @@ class AsientoRepository {
         request: BloquearAsientosRequest
     ): Result<BloquearAsientosResponse> {
         return try {
-            val response = client.post("/api/asientos/$eventoId/bloquear") {
+            println("AsientoRepository: Bloqueando asientos para evento $eventoId...")
+            val response = client.post("/api/asientos/bloquear") {
                 contentType(ContentType.Application.Json)
                 setBody(request)
+                // ✅ Agregar token manualmente
+                ApiClient.getAuthToken()?.let { token ->
+                    headers {
+                        append("Authorization", "Bearer $token")
+                    }
+                    println("AsientoRepository: Token agregado para bloqueo")
+                }
             }
             val resultado: BloquearAsientosResponse = response.body()
+            println("AsientoRepository: Asientos bloqueados exitosamente")
             Result.success(resultado)
         } catch (e: Exception) {
+            println("AsientoRepository: Error al bloquear asientos: ${e.message}")
+            e.printStackTrace()
             Result.failure(e)
         }
     }

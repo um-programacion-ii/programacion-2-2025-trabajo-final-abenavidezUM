@@ -5,9 +5,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,7 +18,6 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.eventos.app.data.models.EstadoVenta
 import com.eventos.app.data.models.Venta
 import com.eventos.app.ui.viewmodel.SalesHistoryScreenModel
 import com.eventos.app.ui.viewmodel.SalesHistoryUiState
@@ -27,6 +27,7 @@ import com.eventos.app.ui.viewmodel.SalesHistoryUiState
  */
 class SalesHistoryScreen : Screen {
     
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -45,8 +46,8 @@ class SalesHistoryScreen : Screen {
                         Text("ID: ${venta.id}", fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.height(8.dp))
                         Text("Fecha: ${venta.fechaVenta}")
-                        Text("Estado: ${venta.estado}")
-                        Text("Total: $ ${venta.montoTotal.toInt()}")
+                        Text("Resultado: ${if (venta.resultado == true) "✅ Exitosa" else "❌ Fallida"}")
+                        Text("Total: $ ${venta.precioTotal.toInt()}")
                         
                         Spacer(modifier = Modifier.height(12.dp))
                         Text("Asientos:", fontWeight = FontWeight.Bold)
@@ -72,7 +73,7 @@ class SalesHistoryScreen : Screen {
                     title = { Text("Mis Compras") },
                     navigationIcon = {
                         IconButton(onClick = { navigator.pop() }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver")
+                            Icon(Icons.Filled.ArrowBack, "Volver")
                         }
                     },
                     actions = {
@@ -189,25 +190,21 @@ class SalesHistoryScreen : Screen {
                     )
                     
                     Surface(
-                        color = when (venta.estado) {
-                            EstadoVenta.CONFIRMADA -> MaterialTheme.colorScheme.primaryContainer
-                            EstadoVenta.PENDIENTE -> MaterialTheme.colorScheme.tertiaryContainer
-                            EstadoVenta.CANCELADA -> MaterialTheme.colorScheme.errorContainer
+                        color = if (venta.resultado == true) {
+                            MaterialTheme.colorScheme.primaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.errorContainer
                         },
                         shape = MaterialTheme.shapes.small
                     ) {
                         Text(
-                            text = when (venta.estado) {
-                                EstadoVenta.CONFIRMADA -> "Confirmada"
-                                EstadoVenta.PENDIENTE -> "Pendiente"
-                                EstadoVenta.CANCELADA -> "Cancelada"
-                            },
+                            text = if (venta.resultado == true) "✅ Exitosa" else "❌ Fallida",
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             style = MaterialTheme.typography.labelSmall,
-                            color = when (venta.estado) {
-                                EstadoVenta.CONFIRMADA -> MaterialTheme.colorScheme.onPrimaryContainer
-                                EstadoVenta.PENDIENTE -> MaterialTheme.colorScheme.onTertiaryContainer
-                                EstadoVenta.CANCELADA -> MaterialTheme.colorScheme.onErrorContainer
+                            color = if (venta.resultado == true) {
+                                MaterialTheme.colorScheme.onPrimaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.onErrorContainer
                             }
                         )
                     }
@@ -231,7 +228,7 @@ class SalesHistoryScreen : Screen {
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        text = "$ ${venta.montoTotal.toInt()}",
+                        text = "$ ${venta.precioTotal.toInt()}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary

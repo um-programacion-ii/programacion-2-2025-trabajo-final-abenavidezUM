@@ -1,6 +1,5 @@
 package com.eventos.app.ui.components
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -33,37 +32,29 @@ fun EventosPrimaryButton(
             contentColor = MaterialTheme.colorScheme.onPrimary
         )
     ) {
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center
-        ) {
-            AnimatedVisibility(visible = loading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    strokeWidth = 2.dp
-                )
-            }
-            
-            AnimatedVisibility(visible = !loading) {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    icon?.let {
-                        Icon(
-                            imageVector = it,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                    }
-                    Text(
-                        text = text,
-                        style = MaterialTheme.typography.labelLarge
+        if (loading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(24.dp),
+                color = MaterialTheme.colorScheme.onPrimary,
+                strokeWidth = 2.dp
+            )
+        } else {
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                icon?.let {
+                    Icon(
+                        imageVector = it,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
                 }
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.labelLarge
+                )
             }
         }
     }

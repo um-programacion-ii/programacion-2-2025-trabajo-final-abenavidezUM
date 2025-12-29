@@ -22,3 +22,4 @@ public class EventoResumenDTO {
     private EventoTipoDTO eventoTipo;
 }
 
+

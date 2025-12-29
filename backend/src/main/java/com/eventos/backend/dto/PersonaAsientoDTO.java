@@ -31,6 +31,9 @@ public class PersonaAsientoDTO implements Serializable {
     @NotBlank(message = "El nombre es obligatorio")
     private String nombre;
     
+    @NotBlank(message = "El apellido es obligatorio")
+    private String apellido;
+    
     private String documento;
     
     /**

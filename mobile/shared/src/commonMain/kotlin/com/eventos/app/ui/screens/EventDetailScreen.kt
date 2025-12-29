@@ -4,8 +4,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,6 +26,7 @@ import com.eventos.app.ui.viewmodel.EventDetailUiState
  */
 data class EventDetailScreen(val eventId: Long) : Screen {
     
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -37,7 +39,7 @@ data class EventDetailScreen(val eventId: Long) : Screen {
                     title = { Text("Detalle del Evento") },
                     navigationIcon = {
                         IconButton(onClick = { navigator.pop() }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver")
+                            Icon(Icons.Filled.ArrowBack, "Volver")
                         }
                     }
                 )
@@ -245,7 +247,7 @@ data class EventDetailScreen(val eventId: Long) : Screen {
             Button(
                 onClick = onSelectSeats,
                 modifier = Modifier.fillMaxWidth(),
-                enabled = evento.activo && evento.asientosDisponibles > 0
+                enabled = (evento.activo ?: true) && evento.asientosDisponibles > 0
             ) {
                 Text(
                     text = if (evento.asientosDisponibles > 0) 
@@ -256,7 +258,7 @@ data class EventDetailScreen(val eventId: Long) : Screen {
                 )
             }
             
-            if (!evento.activo) {
+            if (evento.activo == false) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "Este evento no está disponible actualmente",

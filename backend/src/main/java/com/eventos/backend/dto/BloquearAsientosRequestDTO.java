@@ -27,3 +27,4 @@ public class BloquearAsientosRequestDTO {
     private List<AsientoSeleccionadoDTO> asientos;
 }
 
+

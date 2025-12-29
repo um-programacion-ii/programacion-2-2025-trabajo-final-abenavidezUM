@@ -3,36 +3,35 @@ package com.eventos.app.data.models
 import kotlinx.serialization.Serializable
 
 /**
- * Venta completa
+ * Venta completa - coincide con VentaDTO del backend
  */
 @Serializable
 data class Venta(
     val id: Long,
+    val idExterno: Long? = null,
     val eventoId: Long,
-    val usuarioId: Long,
+    val eventoTitulo: String? = null,
     val fechaVenta: String,
-    val montoTotal: Double,
-    val estado: EstadoVenta,
-    val asientos: List<AsientoVenta>
+    val precioTotal: Double,
+    val resultado: Boolean? = null,
+    val descripcion: String? = null,
+    val confirmadaCatedra: Boolean? = null,
+    val asientos: List<AsientoVenta>,
+    val createdAt: String? = null
 )
 
-@Serializable
-enum class EstadoVenta {
-    PENDIENTE,
-    CONFIRMADA,
-    CANCELADA
-}
-
 /**
- * Asiento vendido
+ * Asiento vendido - coincide con AsientoVentaDTO del backend
  */
 @Serializable
 data class AsientoVenta(
+    val id: Long? = null,
     val fila: Int,
     val columna: Int,
     val nombrePersona: String,
     val apellidoPersona: String,
-    val precio: Double
+    val precio: Double,
+    val estado: String? = null
 )
 
 /**
@@ -44,4 +43,5 @@ data class RealizarVentaResponse(
     val mensaje: String?,
     val venta: Venta?
 )
+
 

@@ -1,5 +1,6 @@
 package com.eventos.app.data.models
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
@@ -26,8 +27,12 @@ enum class EstadoAsientoEnum {
 @Serializable
 data class MapaAsientos(
     val eventoId: Long,
-    val filas: Int,
-    val columnas: Int,
+    @SerialName("totalFilas") val filas: Int,
+    @SerialName("totalColumnas") val columnas: Int,
+    @SerialName("asientosTotales") val asientosTotales: Int? = null,
+    @SerialName("asientosLibres") val asientosLibres: Int? = null,
+    @SerialName("asientosOcupados") val asientosOcupados: Int? = null,
+    @SerialName("asientosBloqueados") val asientosBloqueados: Int? = null,
     val asientos: List<EstadoAsiento>
 )
 
@@ -36,6 +41,7 @@ data class MapaAsientos(
  */
 @Serializable
 data class BloquearAsientosRequest(
+    val eventoId: Long,
     val asientos: List<AsientoRequest>
 )
 
@@ -52,7 +58,7 @@ data class AsientoRequest(
 data class BloquearAsientosResponse(
     val exitoso: Boolean,
     val mensaje: String?,
-    val asientosBloqueados: List<AsientoRequest>?,
-    val asientosNoDisponibles: List<AsientoRequest>?
+    val asientosBloqueados: List<AsientoRequest>? = null,
+    val expiracion: String? = null  // ✅ Campo del backend
 )
 

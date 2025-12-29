@@ -20,6 +20,8 @@ public class AsientoVentaMapper {
                 .fila(asiento.getFila())
                 .columna(asiento.getColumna())
                 .nombrePersona(asiento.getNombrePersona())
+                .apellidoPersona(asiento.getApellidoPersona())
+                .precio(asiento.getPrecio())
                 .estado(asiento.getEstado())
                 .build();
     }
@@ -44,6 +46,8 @@ public class AsientoVentaMapper {
                 .fila(dto.getFila())
                 .columna(dto.getColumna())
                 .nombrePersona(dto.getNombrePersona())
+                .apellidoPersona(dto.getApellidoPersona())
+                .precio(dto.getPrecio())
                 .estado(dto.getEstado())
                 .build();
     }

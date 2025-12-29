@@ -22,3 +22,4 @@ public class ProxyMapaAsientosResponseDTO {
     private String timestamp;
 }
 
+

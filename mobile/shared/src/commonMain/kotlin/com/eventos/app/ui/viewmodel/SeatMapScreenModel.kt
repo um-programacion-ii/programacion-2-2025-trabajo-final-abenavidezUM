@@ -62,7 +62,7 @@ class SeatMapScreenModel(private val eventoId: Long) : ScreenModel {
         screenModelScope.launch {
             _uiState.value = SeatMapUiState.Blocking
             
-            val request = BloquearAsientosRequest(seatsToBlock)
+            val request = BloquearAsientosRequest(eventoId, seatsToBlock)
             val result = asientoRepository.bloquearAsientos(eventoId, request)
             
             _uiState.value = if (result.isSuccess) {

@@ -21,3 +21,4 @@ public class CatedraAsientoNotificacionDTO {
     private String timestamp;
 }
 
+

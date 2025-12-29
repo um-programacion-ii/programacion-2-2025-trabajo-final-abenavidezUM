@@ -32,3 +32,4 @@ public class EstadoAsientoDTO {
     public static final String SELECCIONADO = "SELECCIONADO";
 }
 
+

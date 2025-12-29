@@ -2,6 +2,7 @@ package com.eventos.app.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -10,8 +11,6 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.eventos.app.data.session.SessionManager
-import com.eventos.app.data.session.SessionState
 import kotlinx.coroutines.launch
 
 /**
@@ -19,72 +18,39 @@ import kotlinx.coroutines.launch
  */
 class LoginScreen : Screen {
     
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val sessionManager = remember { SessionManager.getInstance() }
         val scope = rememberCoroutineScope()
         
         var username by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }
         var isLoading by remember { mutableStateOf(false) }
-        var checkingSession by remember { mutableStateOf(true) }
-        var showExpiredDialog by remember { mutableStateOf(false) }
+        var errorMessage by remember { mutableStateOf<String?>(null) }
         
-        // Verificar sesión activa al iniciar
-        LaunchedEffect(Unit) {
-            checkingSession = true
-            val state = sessionManager.checkActiveSession()
-            checkingSession = false
-            
-            when (state) {
-                is SessionState.Active -> {
-                    // Hay una sesión activa, navegar a PersonDataScreen
-                    navigator.replace(PersonDataScreen(eventId = state.sesion.eventoId))
+        val authRepository = remember { com.eventos.app.data.repository.AuthRepository() }
+        
+        // Función de login
+        val onLogin: () -> Unit = {
+            scope.launch {
+                isLoading = true
+                errorMessage = null
+                println("LoginScreen: Iniciando login con usuario: $username")
+                
+                val result = authRepository.login(username, password)
+                
+                if (result.isSuccess) {
+                    println("LoginScreen: Login exitoso, navegando a eventos")
+                    navigator.replace(EventListScreen())
+                } else {
+                    val error = result.exceptionOrNull()
+                    errorMessage = error?.message ?: "Error al iniciar sesión"
+                    println("LoginScreen: Login falló: $errorMessage")
                 }
-                is SessionState.Expired -> {
-                    showExpiredDialog = true
-                }
-                SessionState.NoSession -> {
-                    // No hay sesión, mostrar pantalla de login normal
-                }
+                
+                isLoading = false
             }
-        }
-        
-        // Dialog de sesión expirada
-        if (showExpiredDialog) {
-            AlertDialog(
-                onDismissRequest = { showExpiredDialog = false },
-                title = { Text("Sesión Expirada") },
-                text = { Text("Tu sesión de compra ha expirado. Por favor, inicia sesión y comienza una nueva compra.") },
-                confirmButton = {
-                    Button(onClick = { 
-                        showExpiredDialog = false
-                        scope.launch {
-                            sessionManager.clearSession()
-                        }
-                    }) {
-                        Text("Entendido")
-                    }
-                }
-            )
-        }
-        
-        // Mostrar loading mientras verifica sesión
-        if (checkingSession) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    CircularProgressIndicator()
-                    Text("Verificando sesión...")
-                }
-            }
-            return
         }
         
         Scaffold(
@@ -106,6 +72,16 @@ class LoginScreen : Screen {
                     text = "Eventos App",
                     style = MaterialTheme.typography.headlineLarge
                 )
+                
+                // Mostrar error si existe
+                errorMessage?.let { error ->
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = error,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
                 
                 Spacer(modifier = Modifier.height(32.dp))
                 
@@ -133,10 +109,7 @@ class LoginScreen : Screen {
                 Spacer(modifier = Modifier.height(24.dp))
                 
                 Button(
-                    onClick = { 
-                        // TODO: Implementar login
-                        isLoading = true
-                    },
+                    onClick = onLogin,
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isLoading && username.isNotBlank() && password.isNotBlank()
                 ) {
@@ -153,7 +126,7 @@ class LoginScreen : Screen {
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 TextButton(
-                    onClick = { /* TODO: Navegar a registro */ },
+                    onClick = { navigator.push(RegisterScreen()) },
                     enabled = !isLoading
                 ) {
                     Text("¿No tienes cuenta? Regístrate")

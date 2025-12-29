@@ -120,6 +120,8 @@ public class VentaServiceImpl {
                     .fila(persona.getFila())
                     .columna(persona.getColumna())
                     .nombrePersona(persona.getNombre())
+                    .apellidoPersona(persona.getApellido())
+                    .precio(sesion.getPrecioUnitario().doubleValue())
                     .build();
             venta.addAsiento(asiento);
         }
@@ -172,12 +174,19 @@ public class VentaServiceImpl {
                 .map(p -> CatedraAsientoDTO.builder()
                         .fila(p.getFila())
                         .columna(p.getColumna())
-                        .persona(p.getNombre())
+                        .persona(p.getNombre() + " " + p.getApellido())
                         .build())
                 .collect(Collectors.toList());
 
+        // Formatear fecha para la cátedra (formato: yyyy-MM-dd'T'HH:mm:ss.SSS'Z')
+        String fechaFormateada = venta.getFechaVenta()
+                .atZone(java.time.ZoneId.of("UTC"))
+                .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"));
+        
         CatedraRealizarVentaRequestDTO request = CatedraRealizarVentaRequestDTO.builder()
                 .eventoId(venta.getEvento().getIdExterno())
+                .fecha(fechaFormateada)
+                .precioVenta(venta.getPrecioTotal().doubleValue())
                 .asientos(asientosCatedra)
                 .build();
 

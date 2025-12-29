@@ -21,15 +21,32 @@ class AuthRepository {
      */
     suspend fun login(username: String, password: String): Result<JwtResponse> {
         return try {
+            println("AuthRepository: Iniciando login para usuario: $username")
             val response = client.post("/api/auth/login") {
                 contentType(ContentType.Application.Json)
                 setBody(LoginRequest(username, password))
             }
             
+            println("AuthRepository: Respuesta recibida, status: ${response.status}")
+            
+            // Validar status code antes de deserializar
+            if (response.status == HttpStatusCode.Unauthorized) {
+                println("AuthRepository: Credenciales incorrectas (401)")
+                return Result.failure(Exception("Usuario o contraseña incorrectos"))
+            }
+            
+            if (!response.status.isSuccess()) {
+                println("AuthRepository: Error del servidor: ${response.status}")
+                return Result.failure(Exception("Error en el servidor: ${response.status.value}"))
+            }
+            
             val jwtResponse: JwtResponse = response.body()
             ApiClient.setAuthToken(jwtResponse.token)
+            println("AuthRepository: Login exitoso!")
             Result.success(jwtResponse)
         } catch (e: Exception) {
+            println("AuthRepository: Error en login: ${e.message}")
+            e.printStackTrace()
             Result.failure(e)
         }
     }
@@ -41,19 +58,30 @@ class AuthRepository {
         username: String,
         email: String,
         password: String,
-        nombre: String,
-        apellido: String
+        firstName: String,
+        lastName: String
     ): Result<JwtResponse> {
         return try {
+            println("AuthRepository: Iniciando registro para usuario: $username")
             val response = client.post("/api/auth/register") {
                 contentType(ContentType.Application.Json)
-                setBody(RegisterRequest(username, email, password, nombre, apellido))
+                setBody(RegisterRequest(username, email, password, firstName, lastName))
+            }
+            
+            println("AuthRepository: Respuesta recibida, status: ${response.status}")
+            
+            if (!response.status.isSuccess()) {
+                println("AuthRepository: Error del servidor: ${response.status}")
+                return Result.failure(Exception("Error en el servidor: ${response.status.value}"))
             }
             
             val jwtResponse: JwtResponse = response.body()
             ApiClient.setAuthToken(jwtResponse.token)
+            println("AuthRepository: Registro exitoso!")
             Result.success(jwtResponse)
         } catch (e: Exception) {
+            println("AuthRepository: Error en registro: ${e.message}")
+            e.printStackTrace()
             Result.failure(e)
         }
     }

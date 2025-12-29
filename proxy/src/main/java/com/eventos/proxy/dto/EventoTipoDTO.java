@@ -17,3 +17,4 @@ public class EventoTipoDTO {
     private String descripcion;
 }
 
+

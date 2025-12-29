@@ -22,3 +22,4 @@ public class MapaAsientosResponseDTO {
     private String timestamp;
 }
 
+

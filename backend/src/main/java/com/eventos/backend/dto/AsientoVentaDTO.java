@@ -15,6 +15,8 @@ public class AsientoVentaDTO {
     private Integer fila;
     private Integer columna;
     private String nombrePersona;
+    private String apellidoPersona;
+    private Double precio;
     private String estado;
 }
 
