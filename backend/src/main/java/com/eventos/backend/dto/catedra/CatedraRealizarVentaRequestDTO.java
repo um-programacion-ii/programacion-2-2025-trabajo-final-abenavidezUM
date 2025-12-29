@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -16,7 +15,7 @@ public class CatedraRealizarVentaRequestDTO {
     
     private Long eventoId;
     private String fecha;
-    private BigDecimal precioVenta;
+    private Double precioVenta;  // ✅ Cambio de BigDecimal a Double
     private List<CatedraAsientoDTO> asientos;
 }
 

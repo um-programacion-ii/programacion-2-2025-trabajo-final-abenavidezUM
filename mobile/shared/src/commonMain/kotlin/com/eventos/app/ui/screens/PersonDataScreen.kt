@@ -4,8 +4,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,6 +25,7 @@ import com.eventos.app.ui.viewmodel.PersonDataUiState
  */
 data class PersonDataScreen(val eventId: Long) : Screen {
     
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -44,7 +46,7 @@ data class PersonDataScreen(val eventId: Long) : Screen {
                     title = { Text("Datos de Asistentes") },
                     navigationIcon = {
                         IconButton(onClick = { navigator.pop() }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver a selección")
+                            Icon(Icons.Filled.ArrowBack, "Volver a selección")
                         }
                     }
                 )
@@ -264,7 +266,7 @@ data class PersonDataScreen(val eventId: Long) : Screen {
                         shape = MaterialTheme.shapes.small
                     ) {
                         Text(
-                            text = "Fila ${fila + 1}, Asiento ${columna + 1}",
+                            text = "Fila $fila, Columna $columna",
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer

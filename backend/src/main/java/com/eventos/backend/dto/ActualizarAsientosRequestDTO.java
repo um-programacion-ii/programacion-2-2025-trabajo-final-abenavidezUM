@@ -23,3 +23,4 @@ public class ActualizarAsientosRequestDTO {
     private List<AsientoSeleccionadoDTO> asientos;
 }
 
+

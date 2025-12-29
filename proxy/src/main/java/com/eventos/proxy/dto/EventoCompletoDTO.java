@@ -29,3 +29,4 @@ public class EventoCompletoDTO {
     private List<IntegranteDTO> integrantes;
 }
 
+

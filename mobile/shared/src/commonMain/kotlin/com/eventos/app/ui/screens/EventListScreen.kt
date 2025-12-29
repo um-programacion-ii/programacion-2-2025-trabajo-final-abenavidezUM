@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,6 +32,7 @@ import kotlinx.coroutines.launch
  */
 class EventListScreen : Screen {
     
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -57,7 +59,7 @@ class EventListScreen : Screen {
                             // Limpiar sesión de compra si existe
                             val sesionRepository = SesionRepository()
                             try {
-                                sesionRepository.cancelarSesion()
+                                sesionRepository.limpiarSesion()
                             } catch (e: Exception) {
                                 // Ignorar error si no hay sesión
                             }

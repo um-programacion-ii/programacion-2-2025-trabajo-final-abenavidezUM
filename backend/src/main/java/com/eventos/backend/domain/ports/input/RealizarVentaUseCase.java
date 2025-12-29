@@ -31,3 +31,4 @@ public interface RealizarVentaUseCase {
     VentaDTO obtenerVentaPorId(Long id);
 }
 
+

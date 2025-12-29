@@ -10,6 +10,9 @@ import com.eventos.backend.infrastructure.adapter.output.persistence.repository.
 import com.eventos.backend.infrastructure.adapter.output.external.service.RedisService;
 import com.eventos.backend.infrastructure.adapter.output.external.service.EventoSyncService;
 import com.eventos.backend.infrastructure.adapter.output.persistence.repository.TipoEventoRepository;
+import com.eventos.backend.infrastructure.adapter.output.persistence.repository.AsientoVentaRepository;
+import com.eventos.backend.infrastructure.adapter.output.external.service.ProxyClient;
+import com.eventos.backend.dto.proxy.ProxyMapaAsientosResponseDTO;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +37,8 @@ public class EventoServiceImpl {
     private final EventoMapper eventoMapper;
     private final RedisService redisService;
     private final ObjectMapper objectMapper;
+    private final AsientoVentaRepository asientoVentaRepository;
+    private final ProxyClient proxyClient;
 
     // Prefijos para cache en Redis
     private static final String CACHE_PREFIX_EVENTO = "evento:";
@@ -65,6 +70,9 @@ public class EventoServiceImpl {
         // Obtener de base de datos
         List<Evento> eventos = eventoRepository.findAllActive();
         List<EventoResumenDTO> eventosDTO = eventoMapper.toResumenDTOList(eventos);
+        
+        // Calcular asientos disponibles reales
+        calcularAsientosDisponibles(eventosDTO);
         
         // Aplicar paginación manual (ya que el repo devuelve List)
         Page<EventoResumenDTO> page = paginateList(eventosDTO, pageable);
@@ -102,6 +110,9 @@ public class EventoServiceImpl {
         
         EventoDetalleDTO eventoDTO = eventoMapper.toDetalleDTO(evento);
         
+        // Calcular asientos disponibles reales
+        calcularAsientosDisponibles(eventoDTO);
+        
         // Guardar en cache
         saveEventoToCache(cacheKey, eventoDTO);
         
@@ -133,6 +144,9 @@ public class EventoServiceImpl {
         
         EventoDetalleDTO eventoDTO = eventoMapper.toDetalleDTO(evento);
         
+        // Calcular asientos disponibles reales
+        calcularAsientosDisponibles(eventoDTO);
+        
         // Guardar en cache
         saveEventoToCache(cacheKey, eventoDTO);
         
@@ -159,6 +173,10 @@ public class EventoServiceImpl {
         
         List<Evento> eventos = eventoRepository.findByTituloContaining(titulo);
         List<EventoResumenDTO> eventosDTO = eventoMapper.toResumenDTOList(eventos);
+        
+        // Calcular asientos disponibles reales
+        calcularAsientosDisponibles(eventosDTO);
+        
         Page<EventoResumenDTO> page = paginateList(eventosDTO, pageable);
         
         savePageToCache(cacheKey, page);
@@ -183,6 +201,10 @@ public class EventoServiceImpl {
         
         List<Evento> eventos = eventoRepository.findFutureEvents(LocalDateTime.now());
         List<EventoResumenDTO> eventosDTO = eventoMapper.toResumenDTOList(eventos);
+        
+        // Calcular asientos disponibles reales
+        calcularAsientosDisponibles(eventosDTO);
+        
         Page<EventoResumenDTO> page = paginateList(eventosDTO, pageable);
         
         savePageToCache(cacheKey, page);
@@ -207,6 +229,10 @@ public class EventoServiceImpl {
         
         List<Evento> eventos = eventoRepository.findPastEvents(LocalDateTime.now());
         List<EventoResumenDTO> eventosDTO = eventoMapper.toResumenDTOList(eventos);
+        
+        // Calcular asientos disponibles reales
+        calcularAsientosDisponibles(eventosDTO);
+        
         Page<EventoResumenDTO> page = paginateList(eventosDTO, pageable);
         
         savePageToCache(cacheKey, page);
@@ -224,6 +250,9 @@ public class EventoServiceImpl {
         
         List<Evento> eventos = eventoRepository.findEventsBetweenDates(inicio, fin);
         List<EventoResumenDTO> eventosDTO = eventoMapper.toResumenDTOList(eventos);
+        
+        // Calcular asientos disponibles reales
+        calcularAsientosDisponibles(eventosDTO);
         
         log.info("Encontrados {} eventos en el rango de fechas", eventos.size());
         return paginateList(eventosDTO, pageable);
@@ -249,6 +278,10 @@ public class EventoServiceImpl {
         
         List<Evento> eventos = eventoRepository.findByTipoEventoAndActivoTrue(tipoEvento);
         List<EventoResumenDTO> eventosDTO = eventoMapper.toResumenDTOList(eventos);
+        
+        // Calcular asientos disponibles reales
+        calcularAsientosDisponibles(eventosDTO);
+        
         Page<EventoResumenDTO> page = paginateList(eventosDTO, pageable);
         
         savePageToCache(cacheKey, page);
@@ -301,6 +334,9 @@ public class EventoServiceImpl {
         }
         
         List<EventoResumenDTO> eventosDTO = eventoMapper.toResumenDTOList(eventos);
+        
+        // Calcular asientos disponibles reales
+        calcularAsientosDisponibles(eventosDTO);
         
         log.info("Búsqueda avanzada encontró {} resultados", eventos.size());
         return paginateList(eventosDTO, pageable);
@@ -404,6 +440,94 @@ public class EventoServiceImpl {
         
         List<T> pageContent = list.subList(start, end);
         return new PageImpl<>(pageContent, pageable, list.size());
+    }
+
+    /**
+     * Calcula los asientos disponibles para cada evento (restando los vendidos locales + ocupados en Cátedra)
+     */
+    private void calcularAsientosDisponibles(List<EventoResumenDTO> eventosDTO) {
+        for (EventoResumenDTO evento : eventosDTO) {
+            try {
+                // 1. Contar asientos vendidos localmente (BD local)
+                Long asientosVendidosLocal = asientoVentaRepository.countAsientosVendidosByEvento(evento.getId());
+                
+                // 2. Consultar asientos ocupados en Cátedra (vía Proxy)
+                int asientosOcupadosCatedra = 0;
+                if (evento.getIdExterno() != null) {
+                    try {
+                        ProxyMapaAsientosResponseDTO mapaProxy = proxyClient.obtenerMapaAsientos(evento.getIdExterno());
+                        if (mapaProxy != null && mapaProxy.getAsientos() != null) {
+                            // Contar asientos que están "Bloqueado" o "Vendido" en la Cátedra
+                            asientosOcupadosCatedra = (int) mapaProxy.getAsientos().values().stream()
+                                    .filter(estado -> "Bloqueado".equalsIgnoreCase(estado) || 
+                                                     "Vendido".equalsIgnoreCase(estado))
+                                    .count();
+                            log.debug("Evento {}: {} ocupados en Cátedra (Bloqueados + Vendidos)", 
+                                    evento.getId(), asientosOcupadosCatedra);
+                        }
+                    } catch (Exception e) {
+                        log.debug("No se pudo consultar proxy para evento {}: {}", evento.getId(), e.getMessage());
+                    }
+                }
+                
+                // 3. Usar el máximo entre local y cátedra (para cubrir ambos casos)
+                // Si la cátedra tiene más ocupados, usamos ese número
+                // Si local tiene más vendidos, usamos ese número
+                int asientosOcupados = Math.max(asientosVendidosLocal.intValue(), asientosOcupadosCatedra);
+                
+                // 4. Calcular disponibles = totales - ocupados
+                int disponibles = evento.getAsientosTotales() - asientosOcupados;
+                evento.setAsientosDisponibles(Math.max(0, disponibles)); // No puede ser negativo
+                
+                log.debug("Evento {}: {} vendidos local, {} ocupados cátedra, {} disponibles de {}", 
+                        evento.getId(), asientosVendidosLocal, asientosOcupadosCatedra, disponibles, evento.getAsientosTotales());
+            } catch (Exception e) {
+                log.warn("Error calculando asientos para evento {}: {}", evento.getId(), e.getMessage());
+                // Si hay error, dejamos el valor por defecto (todos disponibles)
+            }
+        }
+    }
+
+    /**
+     * Calcula los asientos disponibles para un evento (restando los vendidos locales + ocupados en Cátedra)
+     */
+    private void calcularAsientosDisponibles(EventoDetalleDTO eventoDTO) {
+        try {
+            // 1. Contar asientos vendidos localmente (BD local)
+            Long asientosVendidosLocal = asientoVentaRepository.countAsientosVendidosByEvento(eventoDTO.getId());
+            
+            // 2. Consultar asientos ocupados en Cátedra (vía Proxy)
+            int asientosOcupadosCatedra = 0;
+            if (eventoDTO.getIdExterno() != null) {
+                try {
+                    ProxyMapaAsientosResponseDTO mapaProxy = proxyClient.obtenerMapaAsientos(eventoDTO.getIdExterno());
+                    if (mapaProxy != null && mapaProxy.getAsientos() != null) {
+                        // Contar asientos que están "Bloqueado" o "Vendido" en la Cátedra
+                        asientosOcupadosCatedra = (int) mapaProxy.getAsientos().values().stream()
+                                .filter(estado -> "Bloqueado".equalsIgnoreCase(estado) || 
+                                                 "Vendido".equalsIgnoreCase(estado))
+                                .count();
+                        log.debug("Evento {}: {} ocupados en Cátedra (Bloqueados + Vendidos)", 
+                                eventoDTO.getId(), asientosOcupadosCatedra);
+                    }
+                } catch (Exception e) {
+                    log.debug("No se pudo consultar proxy para evento {}: {}", eventoDTO.getId(), e.getMessage());
+                }
+            }
+            
+            // 3. Usar el máximo entre local y cátedra (para cubrir ambos casos)
+            int asientosOcupados = Math.max(asientosVendidosLocal.intValue(), asientosOcupadosCatedra);
+            
+            // 4. Calcular disponibles = totales - ocupados
+            int disponibles = eventoDTO.getAsientosTotales() - asientosOcupados;
+            eventoDTO.setAsientosDisponibles(Math.max(0, disponibles)); // No puede ser negativo
+            
+            log.debug("Evento {}: {} vendidos local, {} ocupados cátedra, {} disponibles de {}", 
+                    eventoDTO.getId(), asientosVendidosLocal, asientosOcupadosCatedra, disponibles, eventoDTO.getAsientosTotales());
+        } catch (Exception e) {
+            log.warn("Error calculando asientos para evento {}: {}", eventoDTO.getId(), e.getMessage());
+            // Si hay error, dejamos el valor por defecto (todos disponibles)
+        }
     }
 
     // ==================== CLASE AUXILIAR PARA CACHE ====================

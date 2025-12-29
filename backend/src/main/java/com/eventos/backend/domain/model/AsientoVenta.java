@@ -33,6 +33,12 @@ public class AsientoVenta {
     @Column(name = "nombre_persona", nullable = false, length = 200)
     private String nombrePersona;
 
+    @Column(name = "apellido_persona", nullable = false, length = 200)
+    private String apellidoPersona;
+
+    @Column(nullable = false)
+    private Double precio;
+
     @Column(length = 50)
     private String estado;
 }

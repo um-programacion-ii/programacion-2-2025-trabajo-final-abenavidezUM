@@ -24,3 +24,4 @@ public class VentaDetalleDTO {
     private List<AsientoVentaDTO> asientos;
 }
 
+

@@ -20,3 +20,4 @@ public class ProxyEstadoAsientoResponseDTO {
     private String timestamp;
 }
 
+

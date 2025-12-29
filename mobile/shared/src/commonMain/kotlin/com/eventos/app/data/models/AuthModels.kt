@@ -13,8 +13,8 @@ data class RegisterRequest(
     val username: String,
     val email: String,
     val password: String,
-    val nombre: String,
-    val apellido: String
+    val firstName: String,
+    val lastName: String
 )
 
 @Serializable
@@ -33,4 +33,5 @@ data class Usuario(
     val apellido: String,
     val activo: Boolean
 )
+
 

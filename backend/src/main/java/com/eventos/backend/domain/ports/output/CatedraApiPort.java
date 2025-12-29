@@ -57,3 +57,4 @@ public interface CatedraApiPort {
     CatedraVentaDetalleDTO obtenerVentaPorId(Long id);
 }
 
+

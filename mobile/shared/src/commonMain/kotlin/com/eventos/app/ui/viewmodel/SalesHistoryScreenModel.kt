@@ -47,3 +47,4 @@ sealed class SalesHistoryUiState {
     data class Error(val message: String) : SalesHistoryUiState()
 }
 
+

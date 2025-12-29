@@ -32,3 +32,4 @@ public interface ProxyApiPort {
     boolean isProxyAvailable();
 }
 
+

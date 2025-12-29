@@ -30,3 +30,4 @@ public interface GestionarEventosUseCase {
     void sincronizarEventos();
 }
 
+

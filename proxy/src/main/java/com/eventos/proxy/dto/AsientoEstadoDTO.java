@@ -18,3 +18,4 @@ public class AsientoEstadoDTO {
     private String estado; // "Bloqueo exitoso", "Ocupado", "Bloqueado", "Libre"
 }
 
+

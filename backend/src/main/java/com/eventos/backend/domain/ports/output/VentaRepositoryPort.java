@@ -39,3 +39,4 @@ public interface VentaRepositoryPort {
     List<Venta> findPendientesConfirmacion();
 }
 
+

@@ -256,3 +256,4 @@ public class UsuarioRepositoryAdapter implements UsuarioRepositoryPort { // Impl
 4. Verificar que todos los imports sean correctos
 5. Ejecutar tests de integración
 
+

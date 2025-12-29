@@ -4,9 +4,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,6 +26,7 @@ import com.eventos.app.ui.viewmodel.ConfirmationUiState
  */
 data class ConfirmationScreen(val eventId: Long) : Screen {
     
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -38,7 +40,7 @@ data class ConfirmationScreen(val eventId: Long) : Screen {
                     navigationIcon = {
                         if (uiState !is ConfirmationUiState.PurchaseSuccess) {
                             IconButton(onClick = { navigator.pop() }) {
-                                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver")
+                                Icon(Icons.Filled.ArrowBack, "Volver")
                             }
                         }
                     }
@@ -133,7 +135,7 @@ data class ConfirmationScreen(val eventId: Long) : Screen {
                                     Spacer(modifier = Modifier.height(12.dp))
                                     Text("ID de venta: ${state.venta.id}")
                                     Text("Fecha: ${state.venta.fechaVenta}")
-                                    Text("Total: $ ${state.venta.montoTotal.toInt()}")
+                                    Text("Total: $ ${state.venta.precioTotal.toInt()}")
                                     Text("Asientos: ${state.venta.asientos.size}")
                                 }
                             }
@@ -267,7 +269,7 @@ data class ConfirmationScreen(val eventId: Long) : Screen {
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Fila ${asiento.fila + 1}, Columna ${asiento.columna + 1}",
+                                text = "Fila ${asiento.fila}, Columna ${asiento.columna}",
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             asiento.persona?.let { persona ->
@@ -328,7 +330,7 @@ data class ConfirmationScreen(val eventId: Long) : Screen {
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "$ ${sesion.asientosSeleccionados.size * 5000}",
+                            text = "$ ${String.format("%.2f", sesion.precioUnitario * sesion.asientosSeleccionados.size)}",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -355,7 +357,7 @@ data class ConfirmationScreen(val eventId: Long) : Screen {
                     Text(
                         text = "• Los asientos quedarán reservados a tu nombre\n" +
                               "• Recibirás un comprobante de compra\n" +
-                              "• La sesión expira el: ${sesion.fechaExpiracion}",
+                              "• La sesión expira el: ${sesion.expiresAt}",
                         style = MaterialTheme.typography.bodySmall
                     )
                 }

@@ -2,6 +2,7 @@ package com.eventos.app.data.repository
 
 import com.eventos.app.data.models.EventoDetalle
 import com.eventos.app.data.models.EventoResumen
+import com.eventos.app.data.models.PageResponse
 import com.eventos.app.data.remote.ApiClient
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -18,18 +19,26 @@ class EventoRepository {
      */
     suspend fun getEventos(page: Int = 0, size: Int = 10): Result<List<EventoResumen>> {
         return try {
+            println("EventoRepository: Obteniendo eventos...")
             val response = client.get("/api/eventos") {
                 parameter("page", page)
                 parameter("size", size)
+                // ✅ Agregar token manualmente
+                ApiClient.getAuthToken()?.let { token ->
+                    headers {
+                        append("Authorization", "Bearer $token")
+                    }
+                    println("EventoRepository: Token agregado: ${token.take(20)}...")
+                }
             }
             
-            // Asumiendo que el backend devuelve Page<EventoResumenDTO>
-            val data: Map<String, Any> = response.body()
-            val content = data["content"] as? List<*>
-            
-            val eventos = content?.mapNotNull { it as? EventoResumen } ?: emptyList()
-            Result.success(eventos)
+            // Backend devuelve Page<EventoResumenDTO>
+            val pageResponse: PageResponse<EventoResumen> = response.body()
+            println("EventoRepository: ${pageResponse.content.size} eventos obtenidos exitosamente")
+            Result.success(pageResponse.content)
         } catch (e: Exception) {
+            println("EventoRepository: Error al obtener eventos: ${e.message}")
+            e.printStackTrace()
             Result.failure(e)
         }
     }
@@ -39,7 +48,14 @@ class EventoRepository {
      */
     suspend fun getEventoById(id: Long): Result<EventoDetalle> {
         return try {
-            val response = client.get("/api/eventos/$id")
+            val response = client.get("/api/eventos/$id") {
+                // ✅ Agregar token manualmente
+                ApiClient.getAuthToken()?.let { token ->
+                    headers {
+                        append("Authorization", "Bearer $token")
+                    }
+                }
+            }
             val evento: EventoDetalle = response.body()
             Result.success(evento)
         } catch (e: Exception) {
@@ -56,13 +72,16 @@ class EventoRepository {
                 parameter("q", query)
                 parameter("page", page)
                 parameter("size", size)
+                // ✅ Agregar token manualmente
+                ApiClient.getAuthToken()?.let { token ->
+                    headers {
+                        append("Authorization", "Bearer $token")
+                    }
+                }
             }
             
-            val data: Map<String, Any> = response.body()
-            val content = data["content"] as? List<*>
-            
-            val eventos = content?.mapNotNull { it as? EventoResumen } ?: emptyList()
-            Result.success(eventos)
+            val pageResponse: PageResponse<EventoResumen> = response.body()
+            Result.success(pageResponse.content)
         } catch (e: Exception) {
             Result.failure(e)
         }

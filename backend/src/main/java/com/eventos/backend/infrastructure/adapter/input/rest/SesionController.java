@@ -22,23 +22,23 @@ public class SesionController {
     private final SesionCompraServiceImpl sesionCompraService;
 
     /**
-     * POST /api/sesion/iniciar
+     * POST /api/sesion?eventoId=X
      * Inicia una sesión de compra para un evento
      */
-    @PostMapping("/iniciar")
-    public ResponseEntity<SesionCompraDTO> iniciarSesion(@Valid @RequestBody IniciarSesionRequestDTO request) {
-        log.info("POST /api/sesion/iniciar - eventoId: {}", request.getEventoId());
-        SesionCompraDTO sesion = sesionCompraService.iniciarSesion(request.getEventoId());
+    @PostMapping
+    public ResponseEntity<SesionCompraDTO> iniciarSesion(@RequestParam Long eventoId) {
+        log.info("POST /api/sesion - eventoId: {}", eventoId);
+        SesionCompraDTO sesion = sesionCompraService.iniciarSesion(eventoId);
         return ResponseEntity.ok(sesion);
     }
 
     /**
-     * GET /api/sesion/actual
+     * GET /api/sesion
      * Obtiene el estado actual de la sesión de compra
      */
-    @GetMapping("/actual")
+    @GetMapping
     public ResponseEntity<SesionCompraDTO> obtenerSesionActual() {
-        log.info("GET /api/sesion/actual");
+        log.info("GET /api/sesion");
         SesionCompraDTO sesion = sesionCompraService.obtenerSesionActual();
         if (sesion == null) {
             return ResponseEntity.noContent().build();
@@ -71,12 +71,12 @@ public class SesionController {
     }
 
     /**
-     * POST /api/sesion/renovar
+     * PUT /api/sesion/renovar
      * Renueva la expiración de la sesión
      */
-    @PostMapping("/renovar")
+    @PutMapping("/renovar")
     public ResponseEntity<SesionCompraDTO> renovarSesion() {
-        log.info("POST /api/sesion/renovar");
+        log.info("PUT /api/sesion/renovar");
         SesionCompraDTO sesion = sesionCompraService.obtenerSesionActual();
         if (sesion == null) {
             return ResponseEntity.noContent().build();

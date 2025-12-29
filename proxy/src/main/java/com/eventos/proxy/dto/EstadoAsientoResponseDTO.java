@@ -20,3 +20,4 @@ public class EstadoAsientoResponseDTO {
     private String timestamp;
 }
 
+

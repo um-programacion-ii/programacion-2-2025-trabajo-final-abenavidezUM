@@ -32,56 +32,87 @@ public class CatedraRedisService {
     /**
      * Obtiene el estado de un asiento específico
      * 
+     * FORMATO REAL DE CÁTEDRA:
+     * - Key: "evento_{id}" (con guión bajo)
+     * - Value: JSON con asientos bloqueados/vendidos
+     * 
      * @param eventoId ID del evento
      * @param fila Fila del asiento
      * @param columna Columna del asiento
-     * @return Estado del asiento ("LIBRE", "BLOQUEADO", "OCUPADO", "VENDIDO") o null si no existe
+     * @return Estado del asiento ("Libre", "Bloqueado", "Vendido") o "Libre" por defecto
      */
     public String getEstadoAsiento(Long eventoId, int fila, int columna) {
         try {
-            // Intentar con estructura de hash (más eficiente)
-            String hashKey = String.format("evento:%d:asientos", eventoId);
-            String field = String.format("%d:%d", fila, columna);
+            // Obtener todos los asientos y buscar el específico
+            Map<Object, Object> asientos = getEstadoAsientosEvento(eventoId);
+            String key = fila + ":" + columna;
             
-            Object estado = redisTemplate.opsForHash().get(hashKey, field);
-            
-            if (estado != null) {
+            if (asientos.containsKey(key)) {
+                String estado = asientos.get(key).toString();
                 log.debug("Estado asiento {}:{} evento {}: {}", fila, columna, eventoId, estado);
-                return estado.toString();
+                return estado;
             }
             
-            // Si no existe en hash, intentar con key individual
-            String key = String.format("evento:%d:asiento:%d:%d", eventoId, fila, columna);
-            Object estadoIndividual = redisTemplate.opsForValue().get(key);
-            
-            if (estadoIndividual != null) {
-                log.debug("Estado asiento {}:{} evento {}: {}", fila, columna, eventoId, estadoIndividual);
-                return estadoIndividual.toString();
-            }
-            
-            log.debug("Asiento {}:{} evento {} no encontrado en Redis", fila, columna, eventoId);
-            return "LIBRE"; // Por defecto si no existe
+            log.debug("Asiento {}:{} evento {} no encontrado en Redis (LIBRE por defecto)", fila, columna, eventoId);
+            return "Libre"; // ✅ Con mayúscula inicial, como usa la cátedra
             
         } catch (Exception e) {
             log.error("Error al consultar estado de asiento {}:{} evento {}: {}", 
                     fila, columna, eventoId, e.getMessage());
-            return null;
+            return "Libre"; // Fallback seguro
         }
     }
 
     /**
      * Obtiene el estado de todos los asientos de un evento
      * 
+     * FORMATO REAL DE CÁTEDRA:
+     * - Key: "evento_{id}" (con guión bajo)
+     * - Value: JSON string con estructura:
+     *   {"eventoId":1,"asientos":[{"fila":1,"columna":3,"estado":"Bloqueado",...}, ...]}
+     * 
+     * Solo se guardan asientos BLOQUEADOS o VENDIDOS, el resto se considera LIBRE.
+     * 
      * @param eventoId ID del evento
      * @return Mapa con posición del asiento (fila:columna) y su estado
      */
     public Map<Object, Object> getEstadoAsientosEvento(Long eventoId) {
         try {
-            String hashKey = String.format("evento:%d:asientos", eventoId);
-            Map<Object, Object> asientos = redisTemplate.opsForHash().entries(hashKey);
+            // ✅ FORMATO CORRECTO: "evento_" + id (con guión bajo)
+            String key = String.format("evento_%d", eventoId);
+            String json = (String) redisTemplate.opsForValue().get(key);
             
-            log.debug("Obtenidos {} asientos para evento {}", asientos.size(), eventoId);
-            return asientos;
+            Map<Object, Object> resultado = new java.util.HashMap<>();
+            
+            if (json == null || json.isBlank()) {
+                log.debug("No hay datos en Redis para key {} (ningún asiento bloqueado/vendido)", key);
+                return resultado; // Vacío = todos libres
+            }
+            
+            // Parsear JSON
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                com.fasterxml.jackson.databind.JsonNode root = mapper.readTree(json);
+                com.fasterxml.jackson.databind.JsonNode asientosNode = root.get("asientos");
+                
+                if (asientosNode != null && asientosNode.isArray()) {
+                    for (com.fasterxml.jackson.databind.JsonNode asientoNode : asientosNode) {
+                        int fila = asientoNode.path("fila").asInt();
+                        int columna = asientoNode.path("columna").asInt();
+                        String estado = asientoNode.path("estado").asText();
+                        
+                        String mapKey = fila + ":" + columna;
+                        resultado.put(mapKey, estado);
+                    }
+                }
+                
+                log.debug("Obtenidos {} asientos para evento {} desde key {}", resultado.size(), eventoId, key);
+                
+            } catch (Exception jsonEx) {
+                log.error("Error al parsear JSON de Redis para evento {}: {}", eventoId, jsonEx.getMessage());
+            }
+            
+            return resultado;
             
         } catch (Exception e) {
             log.error("Error al obtener asientos del evento {}: {}", eventoId, e.getMessage());
@@ -96,7 +127,8 @@ public class CatedraRedisService {
      */
     public Set<String> getEventosConAsientos() {
         try {
-            Set<String> keys = redisTemplate.keys("evento:*:asientos");
+            // ✅ FORMATO CORRECTO: "evento_*" (con guión bajo)
+            Set<String> keys = redisTemplate.keys("evento_*");
             log.debug("Encontrados {} eventos con asientos en Redis", 
                     keys != null ? keys.size() : 0);
             return keys != null ? keys : Set.of();
@@ -145,4 +177,5 @@ public class CatedraRedisService {
         }
     }
 }
+
 

@@ -14,6 +14,9 @@ kotlin {
         }
     }
     
+    // iOS targets desactivados temporalmente (requieren Xcode)
+    // Descomentar cuando sea necesario compilar para iOS
+    /*
     listOf(
         iosX64(),
         iosArm64(),
@@ -24,6 +27,7 @@ kotlin {
             isStatic = true
         }
     }
+    */
 
     sourceSets {
         val commonMain by getting {
@@ -72,6 +76,8 @@ kotlin {
             }
         }
         
+        // iOS sourceSets desactivados temporalmente (requieren Xcode)
+        /*
         val iosX64Main by getting
         val iosArm64Main by getting
         val iosSimulatorArm64Main by getting
@@ -86,6 +92,7 @@ kotlin {
                 implementation("io.ktor:ktor-client-darwin:2.3.7")
             }
         }
+        */
     }
 }
 

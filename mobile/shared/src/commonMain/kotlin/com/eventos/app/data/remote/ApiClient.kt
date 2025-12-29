@@ -19,7 +19,8 @@ import kotlinx.serialization.json.Json
  */
 object ApiClient {
     
-    private const val BASE_URL = "http://localhost:8080" // TODO: Cambiar en producción
+    // IMPORTANTE: 10.0.2.2 es la IP para acceder al localhost del host desde el emulador
+    private const val BASE_URL = "http://10.0.2.2:8080"
     
     private var authToken: String? = null
     
@@ -37,24 +38,14 @@ object ApiClient {
         }
         
         install(Logging) {
-            logger = Logger.DEFAULT
-            level = LogLevel.INFO
+            logger = Logger.SIMPLE
+            level = LogLevel.ALL
         }
         
         install(HttpTimeout) {
-            requestTimeoutMillis = 30000
-            connectTimeoutMillis = 30000
-            socketTimeoutMillis = 30000
-        }
-        
-        install(Auth) {
-            bearer {
-                loadTokens {
-                    authToken?.let {
-                        BearerTokens(it, it)
-                    }
-                }
-            }
+            requestTimeoutMillis = 15000  // Reducido a 15s para debug
+            connectTimeoutMillis = 10000   // Reducido a 10s para debug
+            socketTimeoutMillis = 15000    // Reducido a 15s para debug
         }
         
         // Interceptor para detectar 401 Unauthorized

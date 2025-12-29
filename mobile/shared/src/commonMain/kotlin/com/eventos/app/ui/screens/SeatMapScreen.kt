@@ -7,8 +7,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,6 +32,7 @@ import com.eventos.app.ui.viewmodel.SeatMapUiState
  */
 data class SeatMapScreen(val eventId: Long) : Screen {
     
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -51,7 +53,7 @@ data class SeatMapScreen(val eventId: Long) : Screen {
                     title = { Text("Seleccionar Asientos") },
                     navigationIcon = {
                         IconButton(onClick = { navigator.pop() }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver")
+                            Icon(Icons.Filled.ArrowBack, "Volver")
                         }
                     }
                 )
@@ -158,6 +160,14 @@ data class SeatMapScreen(val eventId: Long) : Screen {
                 
                 SeatMapUiState.BlockSuccess -> {
                     // Navegación manejada por LaunchedEffect
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
                 }
             }
         }
@@ -212,7 +222,8 @@ data class SeatMapScreen(val eventId: Long) : Screen {
                 modifier = Modifier.weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                items(mapa.filas) { fila ->
+                items(mapa.filas) { filaIndex ->
+                    val fila = filaIndex + 1 // ✅ Convertir a base-1
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -222,13 +233,14 @@ data class SeatMapScreen(val eventId: Long) : Screen {
                     ) {
                         // Número de fila
                         Text(
-                            text = "${fila + 1}",
+                            text = "$fila",
                             modifier = Modifier.width(24.dp),
                             style = MaterialTheme.typography.labelSmall
                         )
                         
                         // Asientos de la fila
-                        for (columna in 0 until mapa.columnas) {
+                        for (columnaIndex in 0 until mapa.columnas) {
+                            val columna = columnaIndex + 1 // ✅ Convertir a base-1
                             val asiento = mapa.asientos.find { 
                                 it.fila == fila && it.columna == columna 
                             }
@@ -310,7 +322,7 @@ data class SeatMapScreen(val eventId: Long) : Screen {
         ) {
             if (enabled) {
                 Text(
-                    text = "${columna + 1}",
+                    text = "$columna",
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.White,
                     fontWeight = FontWeight.Bold
