@@ -1,0 +1,28 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+logging:
+  level:
+    root: INFO
+    com.eventos.proxy: DEBUG
+    org.springframework.kafka: DEBUG
+    org.springframework.data.redis: DEBUG
+
+# Configuración de Redis de cátedra (desarrollo)
+catedra:
+  redis:
+    host: 192.168.194.250
+    port: 6379
+    password:
+    database: 0
+  kafka:
+    bootstrap-servers: 192.168.194.250:9092
+    group-id: proxy-service-dev-group
+    topic: eventos-cambios
+
+# Backend local
+backend:
+  url: http://localhost:8080
+  notification-endpoint: /api/admin/notificaciones/eventos

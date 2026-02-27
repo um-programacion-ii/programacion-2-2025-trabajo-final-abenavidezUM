@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: proxy-service
+  profiles:
+    active: dev
+
+server:
+  port: 8082
+  servlet:
+    context-path: /proxy
+
+logging:
+  level:
+    root: INFO
+    com.eventos.proxy: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Configuración de Redis de cátedra (para consultar estado de asientos)
+catedra:
+  redis:
+    host: ${CATEDRA_REDIS_HOST:192.168.194.250}
+    port: ${CATEDRA_REDIS_PORT:6379}
+    password: ${CATEDRA_REDIS_PASSWORD:}
+    database: ${CATEDRA_REDIS_DATABASE:0}
+  kafka:
+    bootstrap-servers: ${CATEDRA_KAFKA_BOOTSTRAP:192.168.194.250:9092}
+    group-id: ${CATEDRA_KAFKA_GROUP_ID:proxy-service-group}
+    topic: ${CATEDRA_KAFKA_TOPIC:eventos-cambios}
+
+# Configuración del backend (para enviar notificaciones)
+backend:
+  url: ${BACKEND_URL:http://localhost:8080}
+  notification-endpoint: ${BACKEND_NOTIFICATION_ENDPOINT:/api/admin/notificaciones/eventos}
+
